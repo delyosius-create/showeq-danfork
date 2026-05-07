@@ -509,6 +509,7 @@ void DaemonApp::wireZoneMgr()
                        "playerSelfPosStruct", SZC_Match,
                        m_player,
                        SLOT(playerUpdateSelf(const uint8_t*, size_t, uint8_t)));
+    m_player->setUseRustClientUpdate(m_cfg.useRustDecoder);
 
     // OP_ItemPacket carries one fully-serialized item per fire. Feed
     // every parse into the daemon's itemId -> ItemTemplate cache.
@@ -680,10 +681,12 @@ void DaemonApp::wireSpawnShell()
                        "uint8_t", SZC_None,
                        m_spawnShell,
                        SLOT(npcMoveUpdate(const uint8_t*, size_t, uint8_t)));
+    m_spawnShell->setUseRustNpcMoveUpdate(m_cfg.useRustDecoder);
     m_packet->connect2("OP_ClientUpdate", SP_Zone, DIR_Server,
                        "playerSpawnPosStruct", SZC_Match,
                        m_spawnShell,
                        SLOT(playerUpdate(const uint8_t*, size_t, uint8_t)));
+    m_spawnShell->setUseRustClientUpdate(m_cfg.useRustDecoder);
     m_packet->connect2("OP_CorpseLocResponse", SP_Zone, DIR_Server,
                        "corpseLocStruct", SZC_Match,
                        m_spawnShell,

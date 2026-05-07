@@ -1087,7 +1087,26 @@ void SpawnShell::playerUpdate2(const uint8_t* data, size_t len, uint8_t dir)
   //but sometimes it contains an update for a different spawn, such as
   //an Eye of Zomm cast by the player, a rowboat being controlled by the
   //player, etc.  So in that case, we'll handle it.
-  const playerSelfPosStruct *pupdate = (const playerSelfPosStruct *)data;
+  [[maybe_unused]] playerSelfPosStruct tmp;
+  const playerSelfPosStruct *pupdate = nullptr;
+#ifdef SEQ_USE_RUST
+  if (m_useRustClientUpdate && len == sizeof(playerSelfPosStruct)) {
+    auto out = seq::rust::decode_player_self_pos(
+        rust::Slice<const uint8_t>{data, len});
+    if (out.ok) {
+      std::memset(&tmp, 0, sizeof(tmp));
+      tmp.spawnId  = out.spawn_id;
+      tmp.y = out.y; tmp.x = out.x; tmp.z = out.z;
+      tmp.deltaX = out.delta_x; tmp.deltaY = out.delta_y; tmp.deltaZ = out.delta_z;
+      tmp.heading      = out.heading;
+      tmp.deltaHeading = out.delta_heading;
+      tmp.animation    = out.animation;
+      tmp.pitch        = out.pitch;
+      pupdate = &tmp;
+    }
+  }
+#endif
+  if (!pupdate) pupdate = (const playerSelfPosStruct *)data;
 
   int16_t py = int16_t(pupdate->y);
   int16_t px = int16_t(pupdate->x);
@@ -1125,14 +1144,34 @@ void SpawnShell::playerUpdate(const uint8_t* data, size_t len, uint8_t dir)
   printf("\n");
 #endif
 
-  const playerSpawnPosStruct *pupdate = (const playerSpawnPosStruct *)data;
+  [[maybe_unused]] playerSpawnPosStruct tmp;
+  const playerSpawnPosStruct *pupdate = nullptr;
+#ifdef SEQ_USE_RUST
+  if (m_useRustClientUpdate && len == sizeof(playerSpawnPosStruct)) {
+    auto out = seq::rust::decode_player_spawn_pos(
+        rust::Slice<const uint8_t>{data, len});
+    if (out.ok) {
+      std::memset(&tmp, 0, sizeof(tmp));
+      tmp.spawnId  = out.spawn_id;
+      tmp.spawnId2 = out.spawn_id2;
+      tmp.y = out.y; tmp.x = out.x; tmp.z = out.z;
+      tmp.deltaX = out.delta_x; tmp.deltaY = out.delta_y; tmp.deltaZ = out.delta_z;
+      tmp.heading      = out.heading;
+      tmp.deltaHeading = out.delta_heading;
+      tmp.animation    = out.animation;
+      tmp.pitch        = out.pitch;
+      pupdate = &tmp;
+    }
+  }
+#endif
+  if (!pupdate) pupdate = (const playerSpawnPosStruct *)data;
 
   if (dir != DIR_Client)
   {
     int16_t y = pupdate->y >> 3;
     int16_t x = pupdate->x >> 3;
     int16_t z = pupdate->z >> 3;
-    
+
     int16_t dy = pupdate->deltaY >> 2;
     int16_t dx = pupdate->deltaX >> 2;
     int16_t dz = pupdate->deltaZ >> 2;
@@ -1215,7 +1254,7 @@ void SpawnShell::npcMoveUpdate(const uint8_t* data, size_t len, uint8_t dir)
 #define MASK_DELTA_Z 0x20
 
     // Variable length movement packet. Sanity check.
-	if ((len < 13) || (len > 24)) 
+	if ((len < 13) || (len > 24))
     {
         // Ignore it.
 		seqWarn("Ignoring invalid length %d for movement packet", len);
@@ -1227,6 +1266,22 @@ void SpawnShell::npcMoveUpdate(const uint8_t* data, size_t len, uint8_t dir)
     {
         return;
     }
+
+#ifdef SEQ_USE_RUST
+    if (m_useRustNpcMoveUpdate) {
+        auto out = seq::rust::decode_npc_move_update(
+            rust::Slice<const uint8_t>{data, len});
+        if (out.ok) {
+            updateSpawn(out.spawn_id,
+                        out.x, out.y, out.z,
+                        out.delta_x, out.delta_y, out.delta_z,
+                        static_cast<int8_t>(out.heading),
+                        out.delta_heading,
+                        static_cast<uint8_t>(out.animation));
+            return;
+        }
+    }
+#endif
 
     // Pull data from the header.
     BitStream stream(data, len);

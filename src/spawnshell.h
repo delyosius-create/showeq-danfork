@@ -182,6 +182,8 @@ public slots:
    void setUseRustCorpseLoc       (bool on) { m_useRustCorpseLoc = on; }
    void setUseRustGroundSpawn     (bool on) { m_useRustGroundSpawn = on; }
    void setUseRustSpawnDoor       (bool on) { m_useRustSpawnDoor = on; }
+   void setUseRustClientUpdate    (bool on) { m_useRustClientUpdate = on; }
+   void setUseRustNpcMoveUpdate   (bool on) { m_useRustNpcMoveUpdate = on; }
 
  protected:
    void refilterSpawns(spawnItemType type);
@@ -227,6 +229,8 @@ public slots:
    bool m_useRustCorpseLoc        = false;
    bool m_useRustGroundSpawn      = false;
    bool m_useRustSpawnDoor        = false;
+   bool m_useRustClientUpdate     = false;
+   bool m_useRustNpcMoveUpdate    = false;
    ItemMap m_players;
 
    // timer for saving spawns

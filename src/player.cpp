@@ -1022,7 +1022,30 @@ void Player::update(const spawnStruct* s)
 
 void Player::playerUpdateSelf(const uint8_t* data, size_t len, uint8_t dir)
 {
-  const playerSelfPosStruct *pupdate = (const playerSelfPosStruct*)data;
+  [[maybe_unused]] playerSelfPosStruct tmp;
+  const playerSelfPosStruct *pupdate = nullptr;
+#ifdef SEQ_USE_RUST
+  if (m_useRustClientUpdate && len == sizeof(playerSelfPosStruct)) {
+    auto out = seq::rust::decode_player_self_pos(
+        rust::Slice<const uint8_t>{data, len});
+    if (out.ok) {
+      std::memset(&tmp, 0, sizeof(tmp));
+      tmp.spawnId  = out.spawn_id;
+      tmp.y        = out.y;
+      tmp.x        = out.x;
+      tmp.z        = out.z;
+      tmp.deltaX   = out.delta_x;
+      tmp.deltaY   = out.delta_y;
+      tmp.deltaZ   = out.delta_z;
+      tmp.heading      = out.heading;
+      tmp.deltaHeading = out.delta_heading;
+      tmp.animation    = out.animation;
+      tmp.pitch        = out.pitch;
+      pupdate = &tmp;
+    }
+  }
+#endif
+  if (!pupdate) pupdate = (const playerSelfPosStruct*)data;
 
   if ((dir != DIR_Client) && (pupdate->spawnId != id()))
     return;
