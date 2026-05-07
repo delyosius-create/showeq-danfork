@@ -1378,7 +1378,6 @@ struct ServerZoneEntryStruct : public spawnStruct
 struct doorStruct
 {
 /*0000*/ char    name[32];                       // Filename of Door?
-/*0016*/ // uint8_t unknown016[16];              // ***Placeholder
 /*0032*/ float   y;                              // y loc
 /*0036*/ float   x;                              // x loc
 /*0040*/ float   z;                              // z loc
@@ -1393,9 +1392,9 @@ struct doorStruct
 /*0083*/ uint8_t invertstate;                    // invert state
 /*0084*/ uint32_t zonePoint;
 /*0088*/ uint8_t unknown068[28];                 // ***Placeholder
-/*0116*/ uint8_t unknown096[20];                  // ***Placeholder
-/*0132*/
-}; 
+/*0116*/ uint8_t unknown096[20];                 // ***Placeholder
+/*0136*/
+};
 
 /*
 ** Drop Item On Ground

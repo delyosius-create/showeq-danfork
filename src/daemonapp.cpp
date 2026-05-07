@@ -527,6 +527,7 @@ void DaemonApp::wireSpawnShell()
                        "makeDropStruct", SZC_Modulus,
                        m_spawnShell,
                        SLOT(newGroundItem(const uint8_t*, size_t, uint8_t)));
+    m_spawnShell->setUseRustGroundSpawn(m_cfg.useRustDecoder);
     m_packet->connect2("OP_ClickObject", SP_Zone, DIR_Server,
                        "remDropStruct", SZC_Match,
                        m_spawnShell,
@@ -537,6 +538,7 @@ void DaemonApp::wireSpawnShell()
                        "doorStruct", SZC_Modulus,
                        m_spawnShell,
                        SLOT(newDoorSpawns(const uint8_t*, size_t, uint8_t)));
+    m_spawnShell->setUseRustSpawnDoor(m_cfg.useRustDecoder);
     m_packet->connect2("OP_ZoneEntry", SP_Zone, DIR_Server,
                        "uint8_t", SZC_None,
                        m_spawnShell,

@@ -180,6 +180,8 @@ public slots:
    void setUseRustIllusion        (bool on) { m_useRustIllusion = on; }
    void setUseRustWearChange      (bool on) { m_useRustWearChange = on; }
    void setUseRustCorpseLoc       (bool on) { m_useRustCorpseLoc = on; }
+   void setUseRustGroundSpawn     (bool on) { m_useRustGroundSpawn = on; }
+   void setUseRustSpawnDoor       (bool on) { m_useRustSpawnDoor = on; }
 
  protected:
    void refilterSpawns(spawnItemType type);
@@ -223,6 +225,8 @@ public slots:
    bool m_useRustIllusion         = false;
    bool m_useRustWearChange       = false;
    bool m_useRustCorpseLoc        = false;
+   bool m_useRustGroundSpawn      = false;
+   bool m_useRustSpawnDoor        = false;
    ItemMap m_players;
 
    // timer for saving spawns

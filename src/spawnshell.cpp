@@ -444,56 +444,61 @@ void SpawnShell::newGroundItem(const uint8_t* data, size_t len, uint8_t dir)
    if (!data)
       return;
 
-   NetStream netStream(data, len);
    makeDropStruct ds;
    QString name;
-   union { uint32_t n; float f; } x;
    memset(&ds, 0, sizeof(makeDropStruct));
-
-   // read drop id
-   ds.dropId = netStream.readUInt32NC();
-
-   // read name
-   name = netStream.readText();
-   if(name.length())
-   {
-      strcpy(ds.idFile, name.toLatin1().data());
-      name.resize(0);
+   bool decoded = false;
+#ifdef SEQ_USE_RUST
+   if (m_useRustGroundSpawn) {
+     auto out = seq::rust::decode_ground_spawn(
+         rust::Slice<const uint8_t>{data, len});
+     if (out.ok) {
+       ds.dropId  = out.drop_id;
+       ds.heading = out.heading;
+       ds.y = out.y;
+       ds.x = out.x;
+       ds.z = out.z;
+       // out.id_file is NUL-padded to 30 bytes — strcpy safe because
+       // makeDropStruct.idFile is also char[30] and we treat it as
+       // C-string-terminated.
+       std::memcpy(ds.idFile, out.id_file.data(), 30);
+       decoded = true;
+     }
    }
+#endif
+   if (!decoded) {
+     NetStream netStream(data, len);
+     union { uint32_t n; float f; } x;
 
-   // read past zone id
-   netStream.readUInt32NC();
+     ds.dropId = netStream.readUInt32NC();
 
-   // read past zone instance
-   netStream.readUInt32NC();
+     name = netStream.readText();
+     if(name.length())
+     {
+        strcpy(ds.idFile, name.toLatin1().data());
+        name.resize(0);
+     }
 
-   // read past unknown dword field
-   netStream.readUInt32NC();
+     netStream.readUInt32NC(); // zone id
+     netStream.readUInt32NC(); // zone instance
+     netStream.readUInt32NC(); // unknown
 
-   // read heading
-   x.n = netStream.readUInt32NC();
-   ds.heading = x.f;
+     x.n = netStream.readUInt32NC();
+     ds.heading = x.f;
 
-   // read past unknown dword field
-   netStream.readUInt32NC();
+     netStream.readUInt32NC(); // unknown
+     netStream.readUInt32NC(); // unknown
+     netStream.readUInt32NC(); // unknown
 
-   // read past unknown dword field
-   netStream.readUInt32NC();
+     x.n = netStream.readUInt32NC();
+     ds.y = x.f;
 
-   // read past unknown dword field
-   netStream.readUInt32NC();
+     x.n = netStream.readUInt32NC();
+     ds.x = x.f;
 
-   // read y pos
-   x.n = netStream.readUInt32NC();
-   ds.y = x.f;
-
-   // read x pos
-   x.n = netStream.readUInt32NC();
-   ds.x = x.f;
-
-   // read z pos
-   x.n = netStream.readUInt32NC();
-   ds.z = x.f;
+     x.n = netStream.readUInt32NC();
+     ds.z = x.f;
+   }
 
 #ifdef SPAWNSHELL_DIAG
    seqDebug("SpawnShell::newGroundItem(makeDropStruct *)");
@@ -549,7 +554,38 @@ void SpawnShell::removeGroundItem(const uint8_t* data, size_t, uint8_t dir)
 
 void SpawnShell::newDoorSpawns(const uint8_t* data, size_t len, uint8_t dir)
 {
-  int nDoors = len / sizeof(doorStruct);
+  const int nDoors = len / sizeof(doorStruct);
+#ifdef SEQ_USE_RUST
+  if (m_useRustSpawnDoor) {
+    doorStruct tmp;
+    for (int i = 0; i < nDoors; i++) {
+      const uint8_t* p = data + i * sizeof(doorStruct);
+      auto out = seq::rust::decode_door(
+          rust::Slice<const uint8_t>{p, sizeof(doorStruct)});
+      if (!out.ok) {
+        // Fall back to C++ struct cast for this one element only.
+        const doorStruct* d = (const doorStruct*)p;
+        newDoorSpawn(*d, sizeof(doorStruct), dir);
+        continue;
+      }
+      std::memset(&tmp, 0, sizeof(tmp));
+      std::memcpy(tmp.name, out.name.data(), 32);
+      tmp.y = out.y;
+      tmp.x = out.x;
+      tmp.z = out.z;
+      tmp.heading = out.heading;
+      tmp.incline = out.incline;
+      tmp.size = out.size;
+      tmp.doorId = out.door_id;
+      tmp.opentype = out.opentype;
+      tmp.spawnstate = out.spawnstate;
+      tmp.invertstate = out.invertstate;
+      tmp.zonePoint = out.zone_point;
+      newDoorSpawn(tmp, sizeof(doorStruct), dir);
+    }
+    return;
+  }
+#endif
   const doorStruct* doors = (const doorStruct*)data;
   for (int i = 0; i < nDoors; i++)
     newDoorSpawn(doors[i], sizeof(doorStruct), dir);
