@@ -902,7 +902,24 @@ void Player::updateNpcHP(const uint8_t* data)
 
 void Player::updateSpawnInfo(const uint8_t* data)
 {
-  const SpawnUpdateStruct *su = (const SpawnUpdateStruct *)data;
+  [[maybe_unused]] SpawnUpdateStruct tmp;
+  const SpawnUpdateStruct *su = nullptr;
+#ifdef SEQ_USE_RUST
+  if (m_useRustWearChange) {
+    auto out = seq::rust::decode_wear_change(
+        rust::Slice<const uint8_t>{data, sizeof(SpawnUpdateStruct)});
+    if (out.ok) {
+      std::memset(&tmp, 0, sizeof(tmp));
+      tmp.spawnId    = out.spawn_id;
+      tmp.subcommand = out.subcommand;
+      tmp.arg1       = out.arg1;
+      tmp.arg2       = out.arg2;
+      tmp.arg3       = out.arg3;
+      su = &tmp;
+    }
+  }
+#endif
+  if (!su) su = (const SpawnUpdateStruct *)data;
   if (su->spawnId != id())
     return;
 

@@ -1361,9 +1361,26 @@ void SpawnShell::updateSpawns(const uint8_t* data)
 
 void SpawnShell::updateSpawnInfo(const uint8_t* data)
 {
-   const SpawnUpdateStruct* su = (const SpawnUpdateStruct*)data;
+   [[maybe_unused]] SpawnUpdateStruct tmp;
+   const SpawnUpdateStruct* su = nullptr;
+#ifdef SEQ_USE_RUST
+   if (m_useRustWearChange) {
+     auto out = seq::rust::decode_wear_change(
+         rust::Slice<const uint8_t>{data, sizeof(SpawnUpdateStruct)});
+     if (out.ok) {
+       std::memset(&tmp, 0, sizeof(tmp));
+       tmp.spawnId    = out.spawn_id;
+       tmp.subcommand = out.subcommand;
+       tmp.arg1       = out.arg1;
+       tmp.arg2       = out.arg2;
+       tmp.arg3       = out.arg3;
+       su = &tmp;
+     }
+   }
+#endif
+   if (!su) su = (const SpawnUpdateStruct*)data;
 #ifdef SPAWNSHELL_DIAG
-   seqDebug("SpawnShell::updateSpawnInfo(id=%d, sub=%d, hp=%d, maxHp=%d)", 
+   seqDebug("SpawnShell::updateSpawnInfo(id=%d, sub=%d, hp=%d, maxHp=%d)",
 	  su->spawnId, su->subcommand, su->arg1, su->arg2);
 #endif
 
@@ -1938,7 +1955,22 @@ void SpawnShell::respawnFromHover(const uint8_t* data, size_t len, uint8_t dir)
 
 void SpawnShell::corpseLoc(const uint8_t* data)
 {
-  const corpseLocStruct* corpseLoc = (const corpseLocStruct*)data;
+  [[maybe_unused]] corpseLocStruct tmp;
+  const corpseLocStruct* corpseLoc = nullptr;
+#ifdef SEQ_USE_RUST
+  if (m_useRustCorpseLoc) {
+    auto out = seq::rust::decode_corpse_loc(
+        rust::Slice<const uint8_t>{data, sizeof(corpseLocStruct)});
+    if (out.ok) {
+      tmp.spawnId = out.spawn_id;
+      tmp.x = out.x;
+      tmp.y = out.y;
+      tmp.z = out.z;
+      corpseLoc = &tmp;
+    }
+  }
+#endif
+  if (!corpseLoc) corpseLoc = (const corpseLocStruct*)data;
   Item* item = m_spawns.value(corpseLoc->spawnId, nullptr);
   if (item != NULL)
   {

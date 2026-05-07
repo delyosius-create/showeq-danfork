@@ -210,6 +210,9 @@ class SpellShell : public QObject
  public:
   // Stage A+5 — gate from --rust-opcodes OP_Buff
   void setUseRustBuff(bool on) { m_useRustBuff = on; }
+  // Stage A+6 — gate from --rust-opcodes
+  void setUseRustCastSpell(bool on) { m_useRustCastSpell = on; }
+  void setUseRustAction   (bool on) { m_useRustAction = on; }
 
  protected:
   void deleteSpell(SpellItem *);
@@ -226,6 +229,8 @@ class SpellShell : public QObject
   SpellItem* m_lastPlayerSpell;
   QTimer *m_timer;
   bool m_useRustBuff = false;
+  bool m_useRustCastSpell = false;
+  bool m_useRustAction = false;
 };
 
 #endif

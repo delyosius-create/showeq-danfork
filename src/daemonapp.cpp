@@ -474,6 +474,8 @@ void DaemonApp::wireZoneMgr()
                        "zoneChangeStruct", SZC_Match,
                        m_zoneMgr,
                        SLOT(zoneChange(const uint8_t*, size_t, uint8_t)));
+    m_zoneMgr->setUseRustZoneChange(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_ZoneChange")));
     m_packet->connect2("OP_NewZone", SP_Zone, DIR_Server,
                        "newZoneStruct", SZC_Match,
                        m_zoneMgr,
@@ -486,10 +488,14 @@ void DaemonApp::wireZoneMgr()
                        "dzSwitchInfo", SZC_None,
                        m_zoneMgr,
                        SLOT(dynamicZonePoints(const uint8_t*, size_t, uint8_t)));
+    m_zoneMgr->setUseRustDzSwitch(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_DzSwitchInfo")));
     m_packet->connect2("OP_DzInfo", SP_Zone, DIR_Server,
                        "dzInfo", SZC_None,
                        m_zoneMgr,
                        SLOT(dynamicZoneInfo(const uint8_t*, size_t, uint8_t)));
+    m_zoneMgr->setUseRustDzInfo(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_DzInfo")));
 
     connect(m_zoneMgr, SIGNAL(playerProfile(const charProfileStruct*)),
             m_player,  SLOT(player(const charProfileStruct*)));
@@ -547,6 +553,8 @@ void DaemonApp::wireSpawnShell()
                        "SpawnUpdateStruct", SZC_Match,
                        m_spawnShell,
                        SLOT(updateSpawnInfo(const uint8_t*)));
+    m_spawnShell->setUseRustWearChange(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_WearChange")));
     m_packet->connect2("OP_HPUpdate", SP_Zone, DIR_Server|DIR_Client,
                        "hpNpcUpdateStruct", SZC_Match,
                        m_spawnShell,
@@ -612,6 +620,8 @@ void DaemonApp::wireSpawnShell()
                        "SpawnUpdateStruct", SZC_Match,
                        m_player,
                        SLOT(updateSpawnInfo(const uint8_t*)));
+    m_player->setUseRustWearChange(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_WearChange")));
     m_packet->connect2("OP_DeleteSpawn", SP_Zone, DIR_Server|DIR_Client,
                        "deleteSpawnStruct", SZC_Match,
                        m_spawnShell,
@@ -676,6 +686,8 @@ void DaemonApp::wireSpawnShell()
                        "corpseLocStruct", SZC_Match,
                        m_spawnShell,
                        SLOT(corpseLoc(const uint8_t*)));
+    m_spawnShell->setUseRustCorpseLoc(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_CorpseLocResponse")));
 
     // Chat. OP_CommonMessage carries the player-to-player channels
     // (/say /tell /guild /group /raid /shout /auction /ooc) parsed by
@@ -721,6 +733,8 @@ void DaemonApp::wireSpawnShell()
                        "groupFollowStruct", SZC_None,
                        m_groupMgr,
                        SLOT(addGroupMember(const uint8_t*)));
+    m_groupMgr->setUseRustGroupFollow(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_GroupFollow")));
     m_packet->connect2("OP_GroupDisband", SP_Zone, DIR_Server,
                        "groupDisbandStruct", SZC_None,
                        m_groupMgr,
@@ -729,12 +743,17 @@ void DaemonApp::wireSpawnShell()
                        "groupDisbandStruct", SZC_None,
                        m_groupMgr,
                        SLOT(removeGroupMember(const uint8_t*)));
+    m_groupMgr->setUseRustGroupDisband(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_GroupDisband")) ||
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_GroupDisband2")));
 
     // SpellShell — mirrors showeq/src/interface.cpp:973-988.
     m_packet->connect2("OP_CastSpell", SP_Zone, DIR_Server|DIR_Client,
                        "startCastStruct", SZC_Match,
                        m_spellShell,
                        SLOT(selfStartSpellCast(const uint8_t*)));
+    m_spellShell->setUseRustCastSpell(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_CastSpell")));
     m_packet->connect2("OP_Buff", SP_Zone, DIR_Server|DIR_Client,
                        "buffStruct", SZC_Match,
                        m_spellShell,
@@ -749,6 +768,8 @@ void DaemonApp::wireSpawnShell()
                        "actionAltStruct", SZC_Match,
                        m_spellShell,
                        SLOT(action(const uint8_t*, size_t, uint8_t)));
+    m_spellShell->setUseRustAction(
+        m_cfg.rustOpcodes.contains(QStringLiteral("OP_Action")));
     m_packet->connect2("OP_SimpleMessage", SP_Zone, DIR_Server,
                        "simpleMessageStruct", SZC_Match,
                        m_spellShell,

@@ -59,7 +59,11 @@ class GroupMgr: public QObject
   float groupBonus();
   
   unsigned long totalLevels();
-  
+
+  // Stage A+6 — gate from --rust-opcodes
+  void setUseRustGroupDisband(bool on) { m_useRustGroupDisband = on; }
+  void setUseRustGroupFollow (bool on) { m_useRustGroupFollow = on; }
+
  public slots:
   void player(const charProfileStruct* player); 
   void groupUpdate(const uint8_t* data, size_t size);
@@ -87,6 +91,8 @@ class GroupMgr: public QObject
   }* m_members[MAX_GROUP_MEMBERS];
   size_t m_memberCount;
   size_t m_membersInZoneCount;
+  bool m_useRustGroupDisband = false;
+  bool m_useRustGroupFollow = false;
 };
 
 #endif // _GROUP_H_

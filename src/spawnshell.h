@@ -184,6 +184,9 @@ public slots:
    // Stage A+5
    void setUseRustClickObject     (bool on) { m_useRustClickObject = on; }
    void setUseRustIllusion        (bool on) { m_useRustIllusion = on; }
+   // Stage A+6
+   void setUseRustWearChange      (bool on) { m_useRustWearChange = on; }
+   void setUseRustCorpseLoc       (bool on) { m_useRustCorpseLoc = on; }
 
  protected:
    void refilterSpawns(spawnItemType type);
@@ -225,6 +228,8 @@ public slots:
    bool m_useRustDeath            = false;
    bool m_useRustClickObject      = false;
    bool m_useRustIllusion         = false;
+   bool m_useRustWearChange       = false;
+   bool m_useRustCorpseLoc        = false;
    ItemMap m_players;
 
    // timer for saving spawns

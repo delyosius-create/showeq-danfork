@@ -65,6 +65,11 @@ class ZoneMgr : public QObject
   QString dzLongName() { return m_dzLongName; }
   uint32_t dzType() { return m_dzType; }
 
+  // Stage A+6 — gate from --rust-opcodes
+  void setUseRustZoneChange (bool on) { m_useRustZoneChange = on; }
+  void setUseRustDzInfo     (bool on) { m_useRustDzInfo = on; }
+  void setUseRustDzSwitch   (bool on) { m_useRustDzSwitch = on; }
+
  public slots:
   void saveZoneState(void);
   void restoreZoneState(void);
@@ -100,6 +105,9 @@ class ZoneMgr : public QObject
   uint32_t m_dzID;
   QString m_dzLongName;
   uint32_t m_dzType;
+  bool m_useRustZoneChange = false;
+  bool m_useRustDzInfo = false;
+  bool m_useRustDzSwitch = false;
 };
 
 #endif // ZONEMGR
