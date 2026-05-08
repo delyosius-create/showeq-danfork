@@ -375,15 +375,15 @@ comment = "You're inviting someone and you are grouped or get invited by a group
   sizechecktype = "none"
 
 [[zone]]
-id      = "ffff"
+id      = "bf04"
 name    = "OP_GroupCancelInvite"
-updated = "2021-02-17"
-comment = "Declining to join a group"
+updated = "2026-05-07"
+comment = "Client-side decline-invite OR leave/disband-group request (modern: 168 bytes; name fields = self+self when leaving). C>S only in observed captures."
 
   [[zone.payloads]]
-  dir           = "both"
+  dir           = "client"
   typename      = "groupDeclineStruct"
-  sizechecktype = "match"
+  sizechecktype = "none"
 
 [[zone]]
 id      = "1bcd"
@@ -835,10 +835,10 @@ comment = "Seems to be sent to handle a variety of UI updates - Variable length"
   sizechecktype = "none"
 
 [[zone]]
-id      = "ffff"
+id      = "b7c6"
 name    = "OP_GroupMemberList"
-updated = "2013-01-16"
-comment = "List of group members -  Variable length"
+updated = "2026-05-07"
+comment = "List of group members - Variable length. Fires S>C once per form-event broadcast to all current members; in 2-person captures observed at 168 bytes (name+name+rich trailer)."
 
   [[zone.payloads]]
   dir           = "server"

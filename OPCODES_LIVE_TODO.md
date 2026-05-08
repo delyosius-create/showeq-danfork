@@ -1,6 +1,6 @@
 # Unresolved opcodes (live)
 
-`showeq-daemon/conf/zoneopcodes.xml` has **224 of 275** zone opcodes still set to `id="ffff"`. `worldopcodes.xml` is clean.
+`showeq-daemon/conf/zoneopcodes.xml` has **222 of 275** zone opcodes still set to `id="ffff"`. `worldopcodes.xml` is clean.
 
 Target server: **live EQ** (Tasks/AA/DZ/Tribute/Fellowship/Marketplace/Mercenaries/etc. all in scope).
 
@@ -90,9 +90,9 @@ Checkbox legend: `[ ]` unresolved, `[x]` resolved, `[~]` superseded / obsolete o
 
 ### Group / raid / pet / target (8)
 - [ ] OP_GroupInvite2
-- [ ] OP_GroupCancelInvite
+- [x] OP_GroupCancelInvite — `0xbf04` (2026-05-07)
 - [x] OP_GroupFollow2 — `0xe92d` (2026-05-07)
-- [ ] OP_GroupMemberList
+- [x] OP_GroupMemberList — `0xb7c6` (2026-05-07)
 - [ ] OP_RaidInvite
 - [ ] OP_RaidJoin
 - [ ] OP_PetCommands
@@ -772,3 +772,37 @@ Disambiguation requires:
 `combat.vpk` and `buffs.vpk` had three to four competing 16-byte S>C unknowns each (e.g. 0xe42f, 0x15b4, 0xcace, 0x11b8) at sizes that match buff/spell-action structs. None of these are confirmable by count alone — all require time-correlated event marks (e.g. `--list-events` correlated to known cast/attack moments). Round-N: re-capture with a script that logs "I just hit auto-attack on/off at T_n" so we can window the C>S tally at exact moments. Same for buff click-off vs server-emitted buff fade.
 
 **Generalizable lesson**: when one capture has multiple unknowns at the same size+direction, the count-based confirmation bar is the wrong tool. Switch to *content fingerprinting* — what does the payload actually carry? OP_GroupFollow2 was solved by noticing 0xe92d was the only one of the three carrying the *invitee's* name vs. self's name, which decoded the function purely from the byte content.
+
+### 2026-05-07 — two-client capture: OP_GroupMemberList, OP_GroupCancelInvite, OP_GroupDisband2 confirmed
+
+Captures: `trade-side-a.vpk` + `trade-side-b.vpk`. Both clients on the same LAN, captured simultaneously via the new `--ip` flag (commit `2d3dc29`). Activity: 3 group form/disband cycles (invites both ways), plus a mace-trade exchange (trade analysis pending — see "trade phase" below).
+
+**OP_GroupMemberList = `0xb7c6`** (S>C, 168 B, n=3 each side). Strong fingerprint:
+- Fires once per form event; broadcasts to **both** members (server pushes the same opcode to all current group members at form time).
+- Does NOT fire on disband events.
+- Matches OP_GroupMemberList's documented purpose: "List of group members - Variable length" — the rich 40-byte trailer in each fire is the variable-member-list payload, fixed at 168 B in 2-person groups.
+
+**OP_GroupCancelInvite = `0xbf04`** (C>S only, 168 B, n=3 across both captures combined — 1 from side-A, 2 from side-B). Strong fingerprint:
+- Pure C>S: never observed S>C in either capture. Rules out a server-broadcast mapping.
+- Payload shape: `name1 = self, name2 = self` at offsets 0..63 / 64..127 — matches `groupDeclineStruct` ("yourname[64], membername[64]") for the self-leave case.
+- Fires immediately before each `OP_GroupDisband (0x02a6)` server broadcast: 290–300 ms gap (client request → server confirm).
+- Best fit on the unresolved list given the C>S-only direction and self-self name shape. Note: the legacy semantic was "Declining to join a group", but modern Live appears to unify decline/leave under one client-side opcode — the captures only contain disband events (no declines), so the decline branch is unverified.
+
+**OP_GroupDisband2 = `0x6c57` confirmed** (existing mapping from commit `964e493`). The previous `group-disband.vpk` fixture was leader-self-disband, so OP_GroupDisband2 didn't fire. With three new disband events captured from both sides:
+
+| Disband | Group leader | Disband-clicker | 0x6c57 fired on |
+|---------|--------------|-----------------|-----------------|
+| 1       | side-A       | side-B          | side-A (leader) |
+| 2       | side-B       | side-B          | side-B (leader) |
+| 3       | side-A       | side-A          | side-A (leader) |
+
+**Rule: OP_GroupDisband2 fires on the leader's side after any group dissolution, regardless of who clicked disband.** The legacy comment "Other member disbanded" was misleading — the right framing is "you-as-leader, your group is gone." Mapping is correct as is, no change needed.
+
+**Unmapped 168 B group-family fires (still unresolved)**:
+
+- **`0x59ab`** (S>C, 168 B, n=3 across both captures). Fires once per form, **on the inviter's side only**. Carries the leader's (=inviter's) name at offset 64. Best unresolved-list candidate is `OP_GroupInvite2` (legacy: "you're inviting someone and you are grouped or get invited by a group"), but our captures all start ungrouped on each form, so the legacy semantic doesn't quite match. Could also be a brand-new modern Live opcode without a legacy name (e.g. `OP_GroupAcknowledge`). Skipping commit — round-N: capture an invite from a leader to a third party while already grouped (need 3+ players) to verify the OP_GroupInvite2 trigger.
+- **`0x1325`** (S>C, 168 B, n=3 each side). Fires on every disband, broadcast to all members. No clean match on the unresolved list. Possibly a modern Live cleanup-broadcast opcode that doesn't have a legacy name, or a renamed entry on the unresolved list under different terminology. Round-N: cross-reference EQEmu's `OP_*` enum for a "post-disband cleanup" entry; alternatively monitor whether `0x1325` also fires on group-leader-changes or other state transitions.
+
+**OP_GroupInvite size split**: observed `OP_GroupInvite (0x7380)` firing at **168 bytes C>S** (when sending an invite) and **176 bytes S>C** (when receiving an invite). The 8-byte tail delta is unexplored — likely a server-added "from-this-server" prefix. Mapping accepts both via `sizechecktype="none"`; no action needed.
+
+**Trade phase — inconclusive**: 4 OP_MoveItem (`0xcb03`) fires per side during the group session indicate the mace bouncing between trade slots. Candidate trade opcodes (`0x4094` 484 B C>S × 4 each side; `0x8b75` 12508 B C>S × 1 side-A; `0x5855` 24 B bidirectional) are buried under post-zone-in chatter and group-state-broadcast bursts that contaminated the trade window. `0x4094` looks like a periodic client heartbeat (fires every ~12 s independent of activity), not a trade op. Round-N: capture a **pure trade-only session** (both clients sit in one zone, no group, no zone change, exactly one mace exchange) — that should drop the noise floor enough to nail OP_TradeRequest, OP_TradeRequestAck, OP_TradeAcceptClick, OP_FinishTrade, OP_TradeCoins.

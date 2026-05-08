@@ -135,9 +135,9 @@
         <comment>You're inviting someone and you are grouped or get invited by a group</comment>
         <payload dir="both" typename="groupInviteStruct" sizechecktype="none"/>
     </opcode>
-    <opcode id="ffff" name="OP_GroupCancelInvite" updated="02/17/21">
-        <comment>Declining to join a group</comment>
-        <payload dir="both" typename="groupDeclineStruct" sizechecktype="match"/>
+    <opcode id="bf04" name="OP_GroupCancelInvite" updated="05/07/26">
+        <comment>Client-side decline-invite OR leave/disband-group request (modern: 168 bytes; name fields = self+self when leaving). C>S only in observed captures.</comment>
+        <payload dir="client" typename="groupDeclineStruct" sizechecktype="none"/>
     </opcode>
     <opcode id="1bcd" name="OP_GroupFollow" updated="04/26/26">
         <comment>Member added (modern: 68 bytes, name at offset 0).</comment>
@@ -300,8 +300,8 @@
         <comment>Seems to be sent to handle a variety of UI updates - Variable length</comment>
         <payload dir="server" typename="uint8_t" sizechecktype="none"/>
     </opcode>
-    <opcode id="ffff" name="OP_GroupMemberList" updated="01/16/13">
-        <comment>List of group members -  Variable length</comment>
+    <opcode id="b7c6" name="OP_GroupMemberList" updated="05/07/26">
+        <comment>List of group members - Variable length. Fires S>C once per form-event broadcast to all current members; in 2-person captures observed at 168 bytes (name+name+rich trailer).</comment>
         <payload dir="server" typename="uint8_t" sizechecktype="none"/>
     </opcode>
     <opcode id="be23" name="OP_GuildMemberList" updated="04/16/26">
