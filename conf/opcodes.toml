@@ -1594,10 +1594,10 @@ comment = "Changes to buff window or song window - 100 bytes"
   sizechecktype = "none"
 
 [[zone]]
-id      = "ffff"
+id      = "5855"
 name    = "OP_ClickBuffOff"
-updated = "2012-11-28"
-comment = "Client clicks off buff - 8 bytes"
+updated = "2026-05-12"
+comment = "C>S: {u32 spawn_id=0, u32 type=0x24, u32 buff_slot, u8[12] pad} (24 bytes). Right-click buff removal. S>C fires carry other appearance types (22, 42, etc.) and are not handled here."
 
   [[zone.payloads]]
   dir           = "client"

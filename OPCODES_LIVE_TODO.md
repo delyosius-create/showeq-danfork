@@ -101,7 +101,7 @@ Checkbox legend: `[ ]` unresolved, `[x]` resolved, `[~]` superseded / obsolete o
 ### Buffs / inspect / chat (7)
 - [ ] OP_BuffWindow
 - [ ] OP_BuffFadeMsg
-- [ ] OP_ClickBuffOff
+- [x] OP_ClickBuffOff — `0x5855` (2026-05-12)
 - [x] OP_InspectRequest — `0xa63b` (2026-05-11)
 - [x] OP_InspectAnswer — `0xce34` (2026-05-11)
 - [ ] OP_ItemTextFile
@@ -869,3 +869,20 @@ Captures: simultaneous A (leader) + B + C (joiner) three-client session. Sequenc
 **Ruled out**: the prior hypothesis that `0x59ab` = `OP_GroupInvite2`. `0x59ab` is S>C (server→inviter), while `OP_GroupInvite2` is the client-initiated grouped invite. `0x0d97` (C>S) is the correct mapping. `0x59ab` has no matching legacy opcode name; leaving unmapped until a name is confirmed.
 
 **Round-N ideas**: capture a group where B invites C (not the leader) to determine if `0x0d97` + `0x59ab` fire on B or only on the leader. This would clarify whether these are leader-specific or any-member-can-invite flows.
+
+### 2026-05-12 — OP_ClickBuffOff=0x5855 (buff-clickoff.vpk + buff-clickoff2.vpk)
+
+Captures: `buff-clickoff.vpk` (SK: Endure Cold + IVU, cast→remove×2) and `buff-clickoff2.vpk` (SK: IVU/Endure Cold/Dead Eye, messier session). Method: `--opcode-stats` + `--dump-payload 0x5855` + Python struct parser on `buffStruct`.
+
+- **OP_ClickBuffOff = `0x5855`** (C>S, 24 bytes). Payload: `{u32 spawn_id=0, u32 type=0x24, u32 buff_slot, u8[12] pad}`. The opcode is bidirectional — S>C fires carry other appearance types (22, 42, 5, 6, etc.) and are unhandled. The C>S type=0x24 variant fires once per buff manually clicked off, with `buff_slot` identifying the slot index. Confirmed by:
+  - `buff-clickoff`: 3 type-0x24 C>S fires (slots 8, 38, 68) appearing after the final round of buffs landed, matching the 2-round cast+remove sequence.
+  - `buff-clickoff2`: 3 more type-0x24 C>S fires (slots 2, 0, 0) during a messier session with IVU auto-drop and Dead Eye.
+  - Zone-in state report also uses this same opcode/type with a persistent slot (slot 12 in both captures = same SK character baseline).
+
+**Side findings:**
+
+- **`0x0691` (S>C, 4 bytes)**: fires once per `OP_Buff` event, payload = recipient spawn_id. Likely a buff-window companion notification ("buff window needs update for spawn X"). n=7/8 matching OP_Buff counts across both captures.
+
+- **`buffStruct` (168B) layout confirmed at wire level**: `spawnid` at +0, `spellid` at +116, `duration` at +120, `spellslot` at +160, `changetype` at +164. `changetype=1` fires for BOTH buff-applied and buff-cleared (struct comment `1=fading` is stale/wrong). Slot-cleared fires have `spellid=0, duration=0`. Spell IDs confirmed: 235=Endure Cold, 225=IVU, 352=Dead Eye(SK).
+
+- **`0x306c` (C>S, 8B)**: still unresolved; fires 1:1 with each OP_Buff application, payload `{u32 seq_or_slot, u32 self_spawn_id}`. Not ClickBuffOff (doesn't fire on removal events).

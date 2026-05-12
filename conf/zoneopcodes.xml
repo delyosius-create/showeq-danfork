@@ -576,8 +576,8 @@
         <comment>Changes to buff window or song window - 100 bytes</comment>
         <payload dir="server" typename="uint8_t" sizechecktype="none"/>
     </opcode>
-    <opcode id="ffff" name="OP_ClickBuffOff" updated="11/28/12">
-        <comment>Client clicks off buff - 8 bytes</comment>
+    <opcode id="5855" name="OP_ClickBuffOff" updated="05/12/26">
+        <comment>C>S: {u32 spawn_id=0, u32 type=0x24, u32 buff_slot, u8[12] pad} (24 bytes). Right-click buff removal. S>C fires carry other appearance types (22, 42, etc.) and are not handled here.</comment>
         <payload dir="client" typename="uint8_t" sizechecktype="none"/>
     </opcode>
     <opcode id="ffff" name="OP_HouseAddress" updated="11/20/15">
