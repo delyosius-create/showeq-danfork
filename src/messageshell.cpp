@@ -567,7 +567,7 @@ void MessageShell::handleSpell(const uint8_t* data, size_t, uint8_t dir)
 
   tempStr = "";
   
-  switch (mem->param1)
+  switch (mem->action)
   {
   case 0:
     {
@@ -625,7 +625,7 @@ void MessageShell::handleSpell(const uint8_t* data, size_t, uint8_t dir)
     else
       spellName = spell_name(mem->spellId);
 
-    if (mem->param1 != 4)
+    if (mem->action != 4)
       tempStr = QString::asprintf("%s%s', slot %d.",
               tempStr.toLatin1().data(),
               spellName.toLatin1().data(),

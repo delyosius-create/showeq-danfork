@@ -191,8 +191,8 @@
         <comment>TradeSpellBookSlotsCode</comment>
         <payload dir="both" typename="tradeSpellBookSlotsStruct" sizechecktype="match"/>
     </opcode>
-    <opcode id="ffff" name="OP_MemorizeSpell" updated="07/19/23">
-        <comment>MemSpellCode</comment>
+    <opcode id="e42f" name="OP_MemorizeSpell" updated="05/13/26">
+        <comment>Bidirectional 16B: {u32 gem_slot, u32 spellId, int16 action, int16 pad, u8[4] unknown}. action=1 C>S begin memorizing (no ack); action=2 C>S+S>C memorize complete (client shows 'You have finished memorizing'); action=3 C>S+S>C zone-in spell sync (declare existing spell in slot). Wire-verified: gem6/7 + IVU(225)/EC(235)/spell347.</comment>
         <payload dir="both" typename="memSpellStruct" sizechecktype="match"/>
     </opcode>
     <opcode id="ce34" name="OP_InspectAnswer" updated="05/11/26">

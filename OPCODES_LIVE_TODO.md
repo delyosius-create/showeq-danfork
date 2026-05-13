@@ -24,7 +24,7 @@ Checkbox legend: `[ ]` unresolved, `[x]` resolved, `[~]` superseded / obsolete o
 ### Spells (5)
 - [x] OP_BeginCast — `0x271f` (2026-05-11)
 - [x] OP_CastSpell — `0xf571` (2026-05-11)
-- [ ] OP_MemorizeSpell
+- [x] OP_MemorizeSpell — `0xe42f` (2026-05-13)
 - [ ] OP_SwapSpell
 - [ ] OP_LoadSpellSet
 
