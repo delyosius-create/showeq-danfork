@@ -576,9 +576,9 @@
         <comment>Changes to buff window or song window - 100 bytes</comment>
         <payload dir="server" typename="uint8_t" sizechecktype="none"/>
     </opcode>
-    <opcode id="5855" name="OP_ClickBuffOff" updated="05/12/26">
-        <comment>C>S: {u32 spawn_id=0, u32 type=0x24, u32 buff_slot, u8[12] pad} (24 bytes). Right-click buff removal. S>C fires carry other appearance types (22, 42, etc.) and are not handled here.</comment>
-        <payload dir="client" typename="uint8_t" sizechecktype="none"/>
+    <opcode id="5855" name="OP_SpawnAppearance2" updated="05/12/26">
+        <comment>Extended 24-byte bidirectional appearance update. Payload: {u32 spawn_id, u32 type, u32 value, u8[12] pad}. C>S type=0x24 (36) with spawn_id=0 = OP_ClickBuffOff (buff_slot in value field). S>C fires carry guild/cast/appearance types and co-occur with buff landing messages. Distinct from OP_SpawnAppearance (0xca91, 8 bytes).</comment>
+        <payload dir="both" typename="uint8_t" sizechecktype="none"/>
     </opcode>
     <opcode id="ffff" name="OP_HouseAddress" updated="11/20/15">
         <comment>House and guildhall address information - Variable length</comment>
