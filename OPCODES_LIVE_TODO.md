@@ -26,18 +26,21 @@ Re-confirmed post-patch (committed to `conf/opcodes.toml`, all 2026-05-22):
 | OP_ZoneServerInfo (world) | `0xf21f` | payload `eqzone-80.everquest.com`, 130b S>C |
 | OP_ZoneEntry | `0xa5bf` | C>S char name (`Zerkdan`); S>C per-spawn name+pos (`Sage_Valgond00`); 486 fires on zone-in |
 | OP_ClientUpdate | `0xf8d1` | 42b C>S, matches `playerSelfPosStruct` (42==42) |
-| OP_MobUpdate | `0x917c` | 15-18b S>C spawn-id + packed pos (struct fix pending: legacy `spawnPositionUpdate` is 14b) |
+| OP_MobUpdate | `0x4a4f` | 14b S>C, legacy `spawnPositionUpdate` layout (int16 spawnId + int64 packed y/z/x + heading); coords ×8; 33/60 updates matched known spawn positions. Earlier guess 0x917c was wrong (15-18b, not position) |
 | OP_GroundSpawn | `0x92dc` | 65b S>C, `ITxxxxx_ACTORDEF` model name + floats |
 | OP_NewZone | `0xa923` | 339b S>C, `poknowledge` + `The Plane of Knowledge` |
 | OP_ItemPacket | `0xe8bc` | ~950b S>C, item names `Bread Cakes`/`Bandages` |
 | OP_GuildMOTD | `0x8d86` | 192b S>C, setter + MOTD text |
 | OP_PlayerProfile | `0xe284` | ~39.6KB S>C zone-in; char name `Zerkdan` at offset 20494 (charProfileStruct name field). Fixes self-identification |
+| OP_Death | `0x1eb2` | 40b S>C `newCorpseStruct` (spawnId@0 dead, killerId@4); kill-correlated: dead id varied per kill, killer id = player spawn id; confirmed vs EQ-log "You have slain" timestamps |
+| OP_TargetMouse | `0x1994` | 4b C>S `clientTargetStruct` (uint32 newTarget); found by EQ-log "Targeted (NPC)" correlation — fired once per target action |
 
 Also fixed (code, not opcode id): post-patch `playerSelfPosStruct` layout —
 self heading was read from the animation/position bits (offset 26), so moving
-forward spun the player marker. Corrected to the modern layout (deltaHeading:10
-+ heading:12 at offset 38) per the commented `struct pos` in player.cpp, and
-heading→degrees shift to `>>12`. See commit bce37e9.
+forward spun the player marker. Corrected to the modern layout (y@6, heading:12+pitch:12@10,
+deltaY@14, animation@18, x@22, z@26, deltaHeading@34). Heading shift: **`>>11`** on Mischief TLP
+and Live (legacy 11-bit 0-2047 = full turn; `>>12` is Test-server-specific only — see commit 75b5658
+which reverted an erroneous `>>12` change). See commits bce37e9 and 75b5658.
 
 Identified but not yet wired (no TOML entry / needs struct work):
 - `0x7e9b` — bulk inventory dump (OP_CharInventory candidate; 161KB, item idfiles)
@@ -46,17 +49,18 @@ Identified but not yet wired (no TOML entry / needs struct work):
 
 Open struct issues:
 - `spawnStruct`: parser under-reads ~62 trailing bytes (`fillSpawnStruct` expects more than the post-patch wire carries). Names decode; position likely OK (divergence is at the tail) but unverified — needs full untruncated S>C `0xa5bf` payloads to retrace.
-- `spawnPositionUpdate` (OP_MobUpdate): wire is 15-18b variable vs legacy 14b fixed; left as `match` (drops cleanly) to avoid garbage positions until the modern packed layout is RE'd.
+- ~~`spawnPositionUpdate` (OP_MobUpdate): wire is 15-18b variable vs legacy 14b fixed~~ — **RESOLVED**: the wrong opcode id (0x917c, 15-18b) was masking the correct 14b struct. With the corrected id 0x4a4f the legacy 14b layout decodes correctly; no struct change needed.
 
-Still unmapped post-patch: combat (HP/death/despawn), chat, buffs, and the rest of the long tail — they need fresh **active-play** captures (the idle zone-in capture lacks them). Daemon on the Pi is configured with `--opcode-stats`/`--list-events` to collect them.
+Still unmapped post-patch: despawn (OP_DeleteSpawn/OP_RemoveSpawn pre-patch ids 0x6965/0x6aa0 are stale), chat, and the rest of the long tail — they need fresh **active-play** captures. Daemon on the Pi is configured with `--opcode-stats`/`--list-events` to collect them.
 
 ---
 
 ## Tier 1 — Core gameplay loop (79)
 
-### Combat (7)
+### Combat (8)
 - [x] OP_AutoAttack — `0x4e71` (2026-05-12)
 - [x] OP_AutoAttack2 — `0x993d` (2026-05-12)
+- [x] OP_Death — `0x1eb2` (2026-05-22)
 - [ ] OP_CombatAbility
 - [ ] OP_Stun
 - [ ] OP_Taunt
@@ -130,11 +134,12 @@ Still unmapped post-patch: combat (HP/death/despawn), chat, buffs, and the rest 
 - [ ] OP_Consume
 - [ ] OP_ReadBook
 
-### Group / raid / pet / target (8)
+### Group / raid / pet / target (9)
 - [x] OP_GroupInvite2 — `0x0d97` (2026-05-11)
 - [x] OP_GroupCancelInvite — `0xbf04` (2026-05-07)
 - [x] OP_GroupFollow2 — `0xe92d` (2026-05-07)
 - [x] OP_GroupMemberList — `0xb7c6` (2026-05-07)
+- [x] OP_TargetMouse — `0x1994` (2026-05-22)
 - [ ] OP_RaidInvite
 - [ ] OP_RaidJoin
 - [ ] OP_PetCommands
@@ -958,3 +963,25 @@ The buff must survive **one full zone cycle** before the client requests server 
 Duration delta in buff-306c-test: initialDuration=270, remaining=237 → 33 ticks × 6s = **198 seconds elapsed** since buff was cast, consistent with the user waiting ~3 minutes before zoning.
 
 **`0xbbf0` clarification:** fires 10 times per zone-in (slots 0-9, all 0xffffffff). It always reports all slots as empty regardless of active buffs. The client uses its own tracking (not `0xbbf0`) to decide which slots to query via `0x306c`.
+
+### 2026-05-22 — OP_MobUpdate corrected to 0x4a4f (spawns-mischief-2.vpk)
+
+Capture: `spawns-mischief-2.vpk` (Mischief TLP, active-play session with mob kills). The initial post-patch assignment `0x917c` was a wrong guess — it was 15-18b which doesn't match `spawnPositionUpdate` (14b fixed). The real mob position update opcode is **`0x4a4f`**: exactly 14b S>C, legacy `spawnPositionUpdate` struct — int16 spawnId + int64 packed (y:19 / z:19 / u3:7 / x:19) + heading:12, coords ×8.
+
+Verification: built a spawn-id→position map from `0xa5bf` zone-entry packets, then confirmed 33/60 captured `0x4a4f` updates mapped back to known spawn positions exactly (remaining 27 were mobs already in motion between two consecutive updates). No struct change needed — the legacy 14b layout is unchanged on Live. The user's in-game `/say target name + /loc` macro (logged to `EQ\Logs\eqlog_*.txt`) provided ground-truth for position cross-checks.
+
+Side finding: `0x917c` (15-18b) was likely animation/HP data, not position. Ruled out as OP_MobUpdate.
+
+### 2026-05-22 — OP_Death = 0x1eb2 (spawns-mischief-2.vpk)
+
+Capture: `spawns-mischief-2.vpk`. Method: kill-correlation — of opcodes firing exactly once per kill, `0x1eb2` was the sole candidate with varying dead-spawn id and constant killer-id (= player's own spawn id). Cross-checked against EQ-log `You have slain <name>` timestamps: opcode fired within the same second as the log entry in all 7 kills.
+
+- **OP_Death = `0x1eb2`** (S>C, 40b). Struct: `newCorpseStruct` — `uint32 spawnId` at offset 0 (the dead mob), `uint32 killerId` at offset 4. Fires for ALL zone deaths, not just the player's (killer_id identifies who struck the killing blow; 0 = environmental/unknown).
+
+Side note: also ruled out during this session — `0x3f37` (coin/loot drops, fires near kills but payload is loot data), `0x32a9` (exp/combat update, fires per kill but carries XP not death ids).
+
+### 2026-05-22 — OP_TargetMouse = 0x1994 (mischief-target-test.vpk)
+
+Capture: targeted mobs repeatedly using left-click while `--dump-payload 0x1994` was active. Method: EQ-log `Targeted (NPC): <name>` timestamp correlation — `0x1994` fired exactly once per target action (C>S, 4b). Previous stale id `0x5727` post-patch never matched any traffic.
+
+- **OP_TargetMouse = `0x1994`** (C>S, 4b). Struct: `clientTargetStruct` — `uint32 newTarget` (spawn id of the targeted entity). Enables `SpawnShell::clientTarget()` to track the player's current target and update the web-client selection highlight. With `protoencoder.cpp` PC-corpse type fix (commit 1557beb), corpses are now correctly selectable and displayed.
