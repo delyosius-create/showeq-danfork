@@ -183,10 +183,10 @@ comment = "Remove spawn from zone"
   sizechecktype = "none"
 
 [[zone]]
-id      = "c7c6"
+id      = "1eb2"
 name    = "OP_Death"
-updated = "2026-04-16"
-comment = "old NewCorpseCode"
+updated = "2026-05-22"
+comment = "NewCorpseCode. Live: 40b S>C newCorpseStruct (spawnId@0 dead, killerId@4). Verified by killing 7 mobs: dead id varied per kill (1746, 3996...), killer id constant = player (4279). Correlated against EQ-log 'You have slain' timestamps. Mischief TLP 2026-05-22."
 
   [[zone.payloads]]
   dir           = "server"
