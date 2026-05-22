@@ -1203,6 +1203,8 @@ void EQPacketStream::processPacket(EQProtocolPacket& packet, bool isSubpacket)
     case OP_Ack:
     case OP_AckFuture:
     case OP_AckAfterDisconnect:
+    case OP_UnknownNet1600:
+    case OP_UnknownNet1700:
     {
 #if defined(PACKET_PROCESS_DIAG) && (PACKET_PROCESS_DIAG > 2)
       seqDebug("EQPacket: no-op on ACK for net opcode %04x seq %04x, stream %s (%d)",
@@ -1212,6 +1214,7 @@ void EQPacketStream::processPacket(EQProtocolPacket& packet, bool isSubpacket)
     }
     break;
     case OP_KeepAlive:
+    case OP_UnknownNet0400:
     case OP_SessionStatRequest:
     case OP_SessionStatResponse:
     {

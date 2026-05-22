@@ -62,6 +62,7 @@ class QString;
 static const uint16_t OP_SessionRequest     = 0x0100;
 static const uint16_t OP_SessionResponse    = 0x0200;
 static const uint16_t OP_Combined           = 0x0300;
+static const uint16_t OP_UnknownNet0400     = 0x0400; // Live: ~9-min keepalive variant; treat as no-op
 static const uint16_t OP_SessionDisconnect  = 0x0500;
 static const uint16_t OP_KeepAlive          = 0x0600;
 static const uint16_t OP_SessionStatRequest = 0x0700;
@@ -70,6 +71,8 @@ static const uint16_t OP_Packet             = 0x0900;
 static const uint16_t OP_Oversized          = 0x0d00;
 static const uint16_t OP_AckFuture          = 0x1100;
 static const uint16_t OP_Ack                = 0x1500;
+static const uint16_t OP_UnknownNet1600     = 0x1600; // Live: ack ch1 variant; treat as no-op
+static const uint16_t OP_UnknownNet1700     = 0x1700; // Live: ack ch2 variant; treat as no-op
 static const uint16_t OP_AppCombined        = 0x1900;
 static const uint16_t OP_AckAfterDisconnect = 0x1d00;
 
