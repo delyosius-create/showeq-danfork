@@ -298,10 +298,10 @@ comment = "ConsiderCode"
   sizechecktype = "match"
 
 [[zone]]
-id      = "5727"
+id      = "1994"
 name    = "OP_TargetMouse"
-updated = "2026-04-16"
-comment = "Targeting a person - old ClientTargetCode"
+updated = "2026-05-22"
+comment = "ClientTargetCode. Live: 4b clientTargetStruct (uint32 newTarget). Found by correlating EQ-log 'Targeted (NPC)' timestamps — 0x1994 fired once per target (C>S, 4b). Was stale 0x5727. Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "both"
