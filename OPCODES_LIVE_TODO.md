@@ -31,6 +31,13 @@ Re-confirmed post-patch (committed to `conf/opcodes.toml`, all 2026-05-22):
 | OP_NewZone | `0xa923` | 339b S>C, `poknowledge` + `The Plane of Knowledge` |
 | OP_ItemPacket | `0xe8bc` | ~950b S>C, item names `Bread Cakes`/`Bandages` |
 | OP_GuildMOTD | `0x8d86` | 192b S>C, setter + MOTD text |
+| OP_PlayerProfile | `0xe284` | ~39.6KB S>C zone-in; char name `Zerkdan` at offset 20494 (charProfileStruct name field). Fixes self-identification |
+
+Also fixed (code, not opcode id): post-patch `playerSelfPosStruct` layout —
+self heading was read from the animation/position bits (offset 26), so moving
+forward spun the player marker. Corrected to the modern layout (deltaHeading:10
++ heading:12 at offset 38) per the commented `struct pos` in player.cpp, and
+heading→degrees shift to `>>12`. See commit bce37e9.
 
 Identified but not yet wired (no TOML entry / needs struct work):
 - `0x7e9b` — bulk inventory dump (OP_CharInventory candidate; 161KB, item idfiles)
