@@ -34,7 +34,9 @@ SpawnTracker::SpawnTracker(SpawnShell* shell, ZoneMgr* zoneMgr,
     connect(m_shell, &SpawnShell::addItem,   this, &SpawnTracker::onAddItem);
     connect(m_shell, &SpawnShell::changeItem,this, &SpawnTracker::onChangeItem);
     connect(m_shell, &SpawnShell::delItem,   this, &SpawnTracker::onDelItem);
-    connect(m_shell, &SpawnShell::killSpawn, this, &SpawnTracker::onKillSpawn);
+    // killSpawn is an overloaded signal; use the macro form to disambiguate.
+    connect(m_shell, SIGNAL(killSpawn(const Item*, const Item*, uint16_t)),
+            this,    SLOT(onKillSpawn(const Item*, const Item*, uint16_t)));
 
     qInfo("SpawnTracker: logging spawn lifecycle to %s", qUtf8Printable(dbPath));
 }
