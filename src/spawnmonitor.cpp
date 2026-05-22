@@ -227,7 +227,28 @@ void SpawnMonitor::killSpawn(const Item* killedSpawn)
     if ( killedSpawn->id() == sp->lastID() )
     {
       restartSpawnPoint(sp);
-      break;
+      return;
+    }
+  }
+
+  // Also record the death on an unconfirmed candidate point (m_spawns).
+  // A mob's first death happens while its point is still a candidate, so
+  // the legacy "m_points only" check dropped it — forcing TWO full cycles
+  // to learn a timer (one to promote, one to time). Recording it here lets
+  // the first death->respawn cycle compute diffTime on promotion (see
+  // checkSpawnPoint), matching MySEQ's one-cycle behavior. No
+  // spawnPointUpdated emit: candidates aren't known to clients yet;
+  // promotion emits newSpawnPoint with the learned timer.
+  QHashIterator<QString, SpawnPoint*> cit( m_spawns );
+  while (cit.hasNext())
+  {
+    cit.next();
+    sp = cit.value();
+    if ( killedSpawn->id() == sp->lastID() )
+    {
+      sp->restart();
+      m_modified = true;
+      return;
     }
   }
 }
