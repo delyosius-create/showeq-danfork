@@ -1116,32 +1116,39 @@ struct spawnStruct
 /*0000*/ uint8_t  light;
 /*0000*/ char     lastName[32];
 /*0000*/ uint32_t petOwnerId;
+         // posData layout reverse-engineered 2026-05-22 on Mischief TLP from a
+         // player spawn at known /loc. Modern packing is [delta:13][coord:19]
+         // per word, coords scaled x8 (consumers already do >>3). Confirmed:
+         // z@posData[2] low19, y@posData[3] high19, x@posData[4] high19, all
+         // deltas 0 while standing.
          union
          {
            struct
            {
-
-              unsigned pitch:12;                          // pitch (up/down heading)
-              signed   y:19;                              // y coord (2nd loc value)
-              unsigned padding00:1;
-
+              /* posData[0] */
+              unsigned pitch:12;                          // pitch (up/down)
               unsigned heading:12;                        // heading
+              unsigned padding00:8;
+
+              /* posData[1] */
+              signed   deltaHeading:10;                   // change in heading
               signed   animation:10;                      // current animation
-              unsigned padding01:10;
+              unsigned padding01:12;
 
-              signed   x:19;                              // x coord (1st loc value)
-              unsigned padding02:13;
-
+              /* posData[2] */
               signed   z:19;                              // z coord (3rd loc value)
               signed   deltaZ:13;                         // change in z
 
-              signed   deltaHeading:10;                   // change in heading
+              /* posData[3] */
               signed   deltaY:13;                         // change in y
-              unsigned padding04:9;
+              signed   y:19;                              // y coord (2nd loc value)
 
+              /* posData[4] */
               signed   deltaX:13;                         // change in x
-              unsigned padding05:19;
+              signed   x:19;                              // x coord (1st loc value)
 
+              /* posData[5] */
+              unsigned padding05:32;
            };
            int32_t posData[6];
          };
