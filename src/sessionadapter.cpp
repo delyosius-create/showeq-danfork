@@ -4,7 +4,9 @@
 #include <QDateTime>
 #include <QLoggingCategory>
 #include <QSet>
+#include <QTimer>
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
 extern "C" { // pcap headers aren't c++-clean
@@ -473,6 +475,17 @@ void SessionAdapter::startStreaming()
 
     // STEP 4: from here on, handlers emit directly to the socket.
     m_liveTailing = true;
+
+    // Start the dead-reckoning tick now that we're streaming. EQ broadcasts
+    // mob positions only a few times/sec across the whole zone, so between
+    // real updates we extrapolate moving spawns to keep motion smooth.
+    if (!m_drTimer) {
+        m_drTimer = new QTimer(this);
+        m_drTimer->setInterval(300);
+        connect(m_drTimer, &QTimer::timeout,
+                this, &SessionAdapter::onDeadReckonTick);
+    }
+    m_drTimer->start();
 }
 
 void SessionAdapter::sendSnapshot()
@@ -659,9 +672,43 @@ void SessionAdapter::onAddItem(const Item* item)
 void SessionAdapter::onDelItem(const Item* item)
 {
     if (!item) return;
+    m_drTracks.remove(item->id());
     seq::v1::Envelope env;
     env.mutable_spawn_removed()->set_id(item->id());
     sendOrBuffer(std::move(env));
+}
+
+void SessionAdapter::onDeadReckonTick()
+{
+    if (!m_liveTailing) return;
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    for (auto it = m_drTracks.begin(); it != m_drTracks.end(); ++it) {
+        DrTrack& t = it.value();
+        if (!t.hasVel) continue;
+        const qint64 dt = now - t.lastMs;
+        // Cap extrapolation: a mob with no real update for >1.5s has likely
+        // stopped or is out of broadcast range; stop guessing so it doesn't
+        // drift, and let the next real update snap it into place.
+        if (dt <= 0 || dt > 1500) continue;
+        // Skip near-stationary spawns to avoid flooding the client with
+        // no-op updates for the whole idle zone.
+        const double moved = (std::abs(t.vx) + std::abs(t.vy) + std::abs(t.vz)) * double(dt);
+        if (moved < 1.0) continue;
+
+        const long ex = std::lround(t.rx + t.vx * double(dt));
+        const long ey = std::lround(t.ry + t.vy * double(dt));
+        const long ez = std::lround(t.rz + t.vz * double(dt));
+
+        seq::v1::Envelope env;
+        auto* upd = env.mutable_spawn_updated();
+        upd->set_id(it.key());
+        auto* pos = upd->mutable_pos();
+        *pos = t.lastPos;                 // heading/animation/velocity verbatim
+        pos->set_x(-static_cast<int32_t>(ex));  // match fillPos x/y negation
+        pos->set_y(-static_cast<int32_t>(ey));
+        pos->set_z(static_cast<int32_t>(ez));
+        sendOrBuffer(std::move(env));
+    }
 }
 
 void SessionAdapter::onChangeItem(const Item* item, uint32_t changeType)
@@ -698,6 +745,27 @@ void SessionAdapter::onChangeItem(const Item* item, uint32_t changeType)
     if (const auto* sp = dynamic_cast<const Spawn*>(item)) {
         if (changeType & tSpawnChangedPosition) {
             seq::encode::fillPos(upd->mutable_pos(), *sp);
+
+            // Dead-reckoning: remember this real position + the encoded Pos,
+            // and estimate velocity from the previous real update so
+            // onDeadReckonTick can interpolate between sparse broadcasts.
+            const qint64 now = QDateTime::currentMSecsSinceEpoch();
+            const int rx = sp->x(), ry = sp->y(), rz = sp->z();
+            DrTrack& t = m_drTracks[item->id()];
+            if (t.lastMs != 0) {
+                const qint64 dt = now - t.lastMs;
+                if (dt > 0 && dt < 2000) {
+                    t.vx = double(rx - t.rx) / double(dt);
+                    t.vy = double(ry - t.ry) / double(dt);
+                    t.vz = double(rz - t.rz) / double(dt);
+                    t.hasVel = true;
+                } else {
+                    t.hasVel = false;  // gap too long; don't extrapolate stale velocity
+                }
+            }
+            t.lastPos = upd->pos();
+            t.rx = rx; t.ry = ry; t.rz = rz;
+            t.lastMs = now;
         }
         if (changeType & tSpawnChangedHP) {
             upd->set_hp_cur(sp->HP());
@@ -721,6 +789,7 @@ void SessionAdapter::onKillSpawn(const Item* deceased, const Item* killer,
 
 void SessionAdapter::onZoneBegin(const QString& shortName)
 {
+    m_drTracks.clear();  // positions from the old zone are meaningless now
     seq::v1::Envelope env;
     auto* zc = env.mutable_zone_changed();
     zc->set_zone_short(shortName.toStdString());

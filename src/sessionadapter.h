@@ -1,11 +1,14 @@
 #pragma once
 
 #include <QByteArray>
+#include <QHash>
 #include <QList>
 #include <QObject>
 #include <QString>
 #include <cstdint>
 #include <deque>
+
+class QTimer;
 
 #include "seq/v1/events.pb.h"
 
@@ -168,6 +171,11 @@ private slots:
     // and emits a ZoneServer envelope.
     void onZoneServerChanged(const QString& host, quint16 port);
 
+    // Dead-reckoning tick (Option 2): every ~300ms, push extrapolated
+    // positions for spawns that are moving, so the client sees smooth
+    // motion between EQ's sparse real OP_MobUpdate broadcasts.
+    void onDeadReckonTick();
+
 private:
     void startStreaming();
     void sendSnapshot();
@@ -211,6 +219,22 @@ private:
     // so this buffer continues filling and a quick reconnect can
     // replaySince(last_seq) without losing intermediate events.
     std::deque<seq::v1::Envelope> m_ringBuffer;
+
+    // Dead-reckoning state. For each spawn we remember its last REAL
+    // position (daemon coords), the encoded Pos of that update (so the
+    // extrapolated envelope reuses heading/animation/velocity verbatim),
+    // and a velocity estimated from the previous real update. onDeadReckonTick
+    // extrapolates pos = lastReal + velocity*elapsed, capped so a mob that
+    // stops snaps to its real spot instead of drifting forever.
+    struct DrTrack {
+        seq::v1::Pos lastPos;             // encoded Pos from the last real update
+        int          rx = 0, ry = 0, rz = 0;  // last real position (daemon coords)
+        qint64       lastMs = 0;          // time of last real update
+        double       vx = 0, vy = 0, vz = 0;  // units per ms
+        bool         hasVel = false;
+    };
+    QHash<uint32_t, DrTrack>     m_drTracks;
+    QTimer*                      m_drTimer = nullptr;
 
     // Per-session leaky-bucket rate limit on inbound ClientEnvelopes.
     // Trusted-LAN tool, so the limit is "polite human" — a runaway loop
