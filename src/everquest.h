@@ -2597,33 +2597,29 @@ struct playerSpawnPosStruct
 ** Length: 42 Octets
 ** OpCode: PlayerPosCode
 */
+// Layout reverse-engineered 2026-05-22 from controlled captures on Mischief
+// TLP (straight northern walk + 360 rotation in place). Post-patch the float
+// coords moved: y@6, x@22, z@26; pitch:12+heading:12 packed at offset 10;
+// deltaHeading at 34. Old layout read x from offset 18 (garbage 1.8e25),
+// heading from a position float (spun the marker while moving).
 struct playerSelfPosStruct
 {
-/*0000*/ uint16_t unknown0000;                   // ***Placeholder (update time counter?)
+/*0000*/ uint16_t unknown0000;                   // update time counter
 /*0002*/ uint16_t spawnId;                       // Player's spawn id
 /*0004*/ uint16_t unknown0004;                   // ***Placeholder
-/*0006*/
-	 unsigned pitch:12;                  // pitch (up/down heading)
-	 unsigned padding00:20;
+/*0006*/ float    y;                             // y coord (north/south) — walk-confirmed
 /*0010*/
-	 float    deltaX;                    // change in x
-/*0014*/
-	 float    deltaZ;                    // change in z
-/*0018*/
-	 float    x;                         // x coord (1st loc value)
-/*0022*/
-	 float    y;                         // y coord (2nd loc value)
-/*0026*/
-	 signed   animation:10;              // velocity
-	 unsigned padding05:22;
-/*0030*/
-	 float    z;                         // z coord (3rd loc value)
-/*0034*/
-	 float    deltaY;                    // change in y
-/*0038*/
-	 signed   deltaHeading:10;           // change in heading
-	 unsigned heading:12;                // heading
-	 unsigned padding07:10;
+	 unsigned pitch:12;                  // pitch (constant during yaw)
+	 unsigned heading:12;                // heading — rotation-confirmed
+	 unsigned padding0010:8;
+/*0014*/ float    deltaY;                         // y velocity (0 while standing)
+/*0018*/ uint8_t  unknown0018[4];                 // animation/sentinel ('dri' bytes)
+/*0022*/ float    x;                             // x coord (east/west) — walk-confirmed
+/*0026*/ float    z;                             // z coord (height) — walk-confirmed
+/*0030*/ float    deltaX;                         // velocity (0 while standing)
+/*0034*/ int16_t  deltaHeading;                   // turn rate (nonzero while turning)
+/*0036*/ uint16_t unknown0036;                    // constant 0x7ff6
+/*0038*/ float    deltaZ;                         // velocity (0 while standing)
 /*0042*/
 };
 
