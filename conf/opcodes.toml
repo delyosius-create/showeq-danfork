@@ -41,10 +41,10 @@ comment = "TimeOfDayCode"
   sizechecktype = "match"
 
 [[zone]]
-id      = "db83"
+id      = "a923"
 name    = "OP_NewZone"
-updated = "2026-04-16"
-comment = "NewZoneCode"
+updated = "2026-05-22"
+comment = "NewZoneCode. Live: 339b S>C, leads with zone short name + long name (confirmed 'poknowledge' + 'The Plane of Knowledge'). Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "server"
@@ -112,10 +112,10 @@ comment = "ExpUpdateCode"
   sizechecktype = "match"
 
 [[zone]]
-id      = "86fa"
+id      = "8d86"
 name    = "OP_GuildMOTD"
-updated = "2026-04-16"
-comment = "GuildMOTD"
+updated = "2026-05-22"
+comment = "GuildMOTD. Live: 192b S>C, setter name + MOTD text (confirmed 'Zerkdan' + 'Signups are open for Saturday's Hunter raid!'), re-sent on zone-in. Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "server"
@@ -814,10 +814,10 @@ comment = "old CorpseLocCode:"
   sizechecktype = "match"
 
 [[zone]]
-id      = "3f3b"
+id      = "e8bc"
 name    = "OP_ItemPacket"
-updated = "2026-05-02"
-comment = "S>C variable-length serialized item delivery; resolved via inventory.opcodestats.txt where 34 fires carried inline ASCII item names (\"Whitened Treant Fists\", etc.) verifiable against the player's loadout. Per-item, fires on slot move and zone-in pickup; the legacy bulk OP_ItemPlayerPacket appears obsolete on current Live."
+updated = "2026-05-22"
+comment = "S>C variable-length serialized item delivery; inline ASCII item names (confirmed 'Bread Cakes', 'Bandages', 'High Quality Steel Gear' at ~950b). Per-item, fires on slot move and zone-in pickup; the legacy bulk OP_ItemPlayerPacket appears obsolete on current Live. Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "server"
