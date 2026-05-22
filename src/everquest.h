@@ -2613,7 +2613,8 @@ struct playerSelfPosStruct
 	 unsigned heading:12;                // heading — rotation-confirmed
 	 unsigned padding0010:8;
 /*0014*/ float    deltaY;                         // y velocity (0 while standing)
-/*0018*/ uint8_t  unknown0018[4];                 // animation/sentinel ('dri' bytes)
+/*0018*/ signed   animation:10;                   // movement animation (0 while standing)
+	 unsigned padding0018:22;                 // includes 'dri' sentinel bytes
 /*0022*/ float    x;                             // x coord (east/west) — walk-confirmed
 /*0026*/ float    z;                             // z coord (height) — walk-confirmed
 /*0030*/ float    deltaX;                         // velocity (0 while standing)
