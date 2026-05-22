@@ -3,10 +3,10 @@
 # from this file by tools/toml_to_xml.py (run via CMake on build).
 
 [[zone]]
-id      = "db56"
+id      = "e284"
 name    = "OP_PlayerProfile"
-updated = "2026-04-16"
-comment = "CharProfileCode"
+updated = "2026-05-22"
+comment = "CharProfileCode. Live: ~39.6KB S>C on zone-in, charProfileStruct (checksum + playerProfileStruct + name). Char name 'Zerkdan' confirmed at offset 20494. Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "server"
