@@ -10,6 +10,41 @@ Checkbox legend: `[ ]` unresolved, `[x]` resolved, `[~]` superseded / obsolete o
 
 ---
 
+## ⚠ 2026-05-22 patch — opcode table re-scrambled
+
+A Live patch on/around **2026-05-22** invalidated essentially the entire
+opcode table built up over April–May. Confirmation: a fresh capture on
+**Mischief TLP** decoded only the handful of opcodes re-mapped below while
+**686 zone packets came back unknown**; none of the prior `[x]` values
+matched live traffic. The dated `[x]` entries further down this file are
+**stale until re-confirmed** against post-patch captures.
+
+Re-confirmed post-patch (committed to `conf/opcodes.toml`, all 2026-05-22):
+
+| Opcode | New id | Evidence |
+|--------|--------|----------|
+| OP_ZoneServerInfo (world) | `0xf21f` | payload `eqzone-80.everquest.com`, 130b S>C |
+| OP_ZoneEntry | `0xa5bf` | C>S char name (`Zerkdan`); S>C per-spawn name+pos (`Sage_Valgond00`); 486 fires on zone-in |
+| OP_ClientUpdate | `0xf8d1` | 42b C>S, matches `playerSelfPosStruct` (42==42) |
+| OP_MobUpdate | `0x917c` | 15-18b S>C spawn-id + packed pos (struct fix pending: legacy `spawnPositionUpdate` is 14b) |
+| OP_GroundSpawn | `0x92dc` | 65b S>C, `ITxxxxx_ACTORDEF` model name + floats |
+| OP_NewZone | `0xa923` | 339b S>C, `poknowledge` + `The Plane of Knowledge` |
+| OP_ItemPacket | `0xe8bc` | ~950b S>C, item names `Bread Cakes`/`Bandages` |
+| OP_GuildMOTD | `0x8d86` | 192b S>C, setter + MOTD text |
+
+Identified but not yet wired (no TOML entry / needs struct work):
+- `0x7e9b` — bulk inventory dump (OP_CharInventory candidate; 161KB, item idfiles)
+- `0x9f2b` / `0x4058` — guild member lists (names + MOTD)
+- `0x695f` — merchant/find list; `0xeee8` — task/achievement names; `0xa300` — server-bonus catalog
+
+Open struct issues:
+- `spawnStruct`: parser under-reads ~62 trailing bytes (`fillSpawnStruct` expects more than the post-patch wire carries). Names decode; position likely OK (divergence is at the tail) but unverified — needs full untruncated S>C `0xa5bf` payloads to retrace.
+- `spawnPositionUpdate` (OP_MobUpdate): wire is 15-18b variable vs legacy 14b fixed; left as `match` (drops cleanly) to avoid garbage positions until the modern packed layout is RE'd.
+
+Still unmapped post-patch: combat (HP/death/despawn), chat, buffs, and the rest of the long tail — they need fresh **active-play** captures (the idle zone-in capture lacks them). Daemon on the Pi is configured with `--opcode-stats`/`--list-events` to collect them.
+
+---
+
 ## Tier 1 — Core gameplay loop (79)
 
 ### Combat (7)
