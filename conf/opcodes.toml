@@ -30,10 +30,10 @@ comment = "ZoneEntryCode. Live: C>S clientZoneEntry (~92b, char name e.g. 'Zerkd
   sizechecktype = "none"
 
 [[zone]]
-id      = "816a"
+id      = "7e22"
 name    = "OP_TimeOfDay"
-updated = "2026-04-16"
-comment = "TimeOfDayCode"
+updated = "2026-05-22"
+comment = "TimeOfDayCode. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0x816a."
 
   [[zone.payloads]]
   dir           = "server"
@@ -52,10 +52,10 @@ comment = "NewZoneCode. Live: 339b S>C, leads with zone short name + long name (
   sizechecktype = "none"
 
 [[zone]]
-id      = "f724"
+id      = "33ec"
 name    = "OP_SpawnDoor"
-updated = "2026-04-16"
-comment = "DoorSpawnsCode"
+updated = "2026-05-22"
+comment = "DoorSpawnsCode. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0xf724."
 
   [[zone.payloads]]
   dir           = "server"
@@ -79,10 +79,10 @@ comment = "MakeDropCode. Live: 65b S>C, '<len>ITxxxxx_ACTORDEF' model name + pos
   sizechecktype = "none"
 
 [[zone]]
-id      = "395b"
+id      = "ad5c"
 name    = "OP_SendZonePoints"
-updated = "2026-04-16"
-comment = "Coords in a zone that will port you to another zone"
+updated = "2026-05-22"
+comment = "Coords in a zone that will port you to another zone. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0x395b."
 
   [[zone.payloads]]
   dir           = "server"
@@ -90,10 +90,10 @@ comment = "Coords in a zone that will port you to another zone"
   sizechecktype = "none"
 
 [[zone]]
-id      = "bf67"
+id      = "0c97"
 name    = "OP_AAExpUpdate"
-updated = "2026-04-16"
-comment = "Receiving AA experience. Also when percent to AA changes."
+updated = "2026-05-22"
+comment = "Receiving AA experience. Also when percent to AA changes. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0xbf67."
 
   [[zone.payloads]]
   dir           = "server"
@@ -139,10 +139,10 @@ comment = "Position updates. Live: 42b C>S playerSelfPosStruct (self position, p
   sizechecktype = "match"
 
 [[zone]]
-id      = "7c8c"
+id      = "917c"
 name    = "OP_NpcMoveUpdate"
-updated = "2026-04-16"
-comment = "Position updates"
+updated = "2026-05-22"
+comment = "Position updates — variable-size NPC movement supplement (distinct from OP_MobUpdate 0x4a4f which is 14b spawnPositionUpdate). Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0x7c8c."
 
   [[zone.payloads]]
   dir           = "server"
@@ -205,10 +205,10 @@ comment = "Multi-slot appearance update. Header=wearChangeStruct(11B), then slot
   sizechecktype = "none"
 
 [[zone]]
-id      = "ca91"
+id      = "9826"
 name    = "OP_SpawnAppearance"
-updated = "2026-04-16"
-comment = "SpawnAppearanceCode"
+updated = "2026-05-22"
+comment = "SpawnAppearanceCode — 8b spawnAppearanceStruct (spawn_id, type, value). Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0xca91."
 
   [[zone.payloads]]
   dir           = "both"
@@ -238,10 +238,10 @@ comment = "NpcHpUpdateCode Update HP % of a PC or NPC"
   sizechecktype = "match"
 
 [[zone]]
-id      = "84c3"
+id      = "9abe"
 name    = "OP_GuildMemberUpdate"
-updated = "2026-04-16"
-comment = "Info regarding guild members"
+updated = "2026-05-22"
+comment = "Info regarding guild members. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0x84c3."
 
   [[zone.payloads]]
   dir           = "server"
@@ -249,10 +249,10 @@ comment = "Info regarding guild members"
   sizechecktype = "match"
 
 [[zone]]
-id      = "0dcd"
+id      = "ab5e"
 name    = "OP_ClickObject"
-updated = "2026-04-16"
-comment = "Items dropped on the ground"
+updated = "2026-05-22"
+comment = "Items dropped on the ground — remDropStruct. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0x0dcd."
 
   [[zone.payloads]]
   dir           = "both"
@@ -260,10 +260,10 @@ comment = "Items dropped on the ground"
   sizechecktype = "match"
 
 [[zone]]
-id      = "a366"
+id      = "049e"
 name    = "OP_Action"
-updated = "2026-04-16"
-comment = "Spells cast etc"
+updated = "2026-05-22"
+comment = "Combat/spell actions — actionStruct (melee hits, spells, etc.) or actionAltStruct. Covers what was called OP_CombatAbility in some naming conventions. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0xa366."
 
   [[zone.payloads]]
   dir           = "both"
@@ -287,10 +287,10 @@ comment = "Combat actions i.e. bash, kick etc"
   sizechecktype = "match"
 
 [[zone]]
-id      = "ae23"
+id      = "a1e7"
 name    = "OP_Consider"
-updated = "2026-04-16"
-comment = "ConsiderCode"
+updated = "2026-05-22"
+comment = "ConsiderCode — considerStruct. Fires C>S/S>C when examining a mob (/con). Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0xae23."
 
   [[zone.payloads]]
   dir           = "both"
@@ -342,10 +342,10 @@ comment = "Server putting players into shroud form"
   sizechecktype = "none"
 
 [[zone]]
-id      = "f996"
+id      = "9148"
 name    = "OP_ZoneChange"
-updated = "2026-04-16"
-comment = "old ZoneChangeCode"
+updated = "2026-05-22"
+comment = "ZoneChangeCode — zoneChangeStruct (both dirs). Fires C>S when client initiates zone, S>C with zone destination. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0xf996."
 
   [[zone.payloads]]
   dir           = "both"
@@ -562,10 +562,10 @@ comment = "EmoteTextCode"
   sizechecktype = "none"
 
 [[zone]]
-id      = "6660"
+id      = "44a0"
 name    = "OP_SimpleMessage"
-updated = "2026-04-16"
-comment = "SimpleMessageCode"
+updated = "2026-05-22"
+comment = "SimpleMessageCode — simpleMessageStruct. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0x6660."
 
   [[zone.payloads]]
   dir           = "server"
@@ -573,10 +573,10 @@ comment = "SimpleMessageCode"
   sizechecktype = "match"
 
 [[zone]]
-id      = "302b"
+id      = "5b40"
 name    = "OP_FormattedMessage"
-updated = "2026-04-16"
-comment = "FormattedMessageCode i.e. pet dismissed etc"
+updated = "2026-05-22"
+comment = "FormattedMessageCode i.e. pet dismissed etc — formattedMessageStruct SZC_none. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0x302b."
 
   [[zone.payloads]]
   dir           = "server"
@@ -584,10 +584,10 @@ comment = "FormattedMessageCode i.e. pet dismissed etc"
   sizechecktype = "none"
 
 [[zone]]
-id      = "dd47"
+id      = "498b"
 name    = "OP_CommonMessage"
-updated = "2026-04-16"
-comment = "ChannelMessageCode i.e. /tell /ooc /shout etc"
+updated = "2026-05-22"
+comment = "ChannelMessageCode i.e. /tell /ooc /shout etc — channelMessageStruct SZC_none. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0xdd47."
 
   [[zone.payloads]]
   dir           = "both"
@@ -595,10 +595,10 @@ comment = "ChannelMessageCode i.e. /tell /ooc /shout etc"
   sizechecktype = "none"
 
 [[zone]]
-id      = "1940"
+id      = "7162"
 name    = "OP_SpecialMesg"
-updated = "2026-04-16"
-comment = "Communicate textual info to client including hail responses etc"
+updated = "2026-05-22"
+comment = "Communicate textual info to client including hail responses etc — specialMessageStruct SZC_none. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0x1940."
 
   [[zone.payloads]]
   dir           = "server"
@@ -879,10 +879,10 @@ comment = "List of group members - Variable length. Fires S>C once per form-even
   sizechecktype = "none"
 
 [[zone]]
-id      = "be23"
+id      = "4058"
 name    = "OP_GuildMemberList"
-updated = "2026-04-16"
-comment = "List of guild members - Variable length"
+updated = "2026-05-22"
+comment = "List of guild members - Variable length. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0xbe23."
 
   [[zone.payloads]]
   dir           = "server"
@@ -1044,10 +1044,10 @@ comment = "Fellowship information - 2576 bytes"
   sizechecktype = "none"
 
 [[zone]]
-id      = "773b"
+id      = "ffff"
 name    = "OP_ExpandedGuildInfo"
-updated = "2026-04-16"
-comment = "Guild ranks and other misc guild data - Variable length"
+updated = "2026-05-22"
+comment = "Guild ranks and other misc guild data - Variable length. Pre-patch was 0x773b. OG SEQ 2026-05-20 places ExpandedGuildInfo at 0x8d86, but we confirmed 0x8d86 as OP_GuildMOTD (setter name + MOTD text payload). May be same opcode named differently, or a separate MOTD-only vs full-guild-info split. Unresolved naming conflict — keep as ffff until independently verified."
 
   [[zone.payloads]]
   dir           = "server"
@@ -1506,10 +1506,10 @@ comment = "Listing of all guilds. Can be triggered by /lfg search?"
   sizechecktype = "none"
 
 [[zone]]
-id      = "4e57"
+id      = "d5e8"
 name    = "OP_GuildsInZoneList"
-updated = "2026-04-16"
-comment = "Listing of guild names present in the current zone.  Generally seen on zoning"
+updated = "2026-05-22"
+comment = "Listing of guild names present in the current zone. Generally seen on zoning. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0x4e57."
 
   [[zone.payloads]]
   dir           = "server"
@@ -1682,10 +1682,10 @@ comment = "Free to play nags and other data - Variable length"
   sizechecktype = "none"
 
 [[zone]]
-id      = "cf5c"
+id      = "695f"
 name    = "OP_Find"
-updated = "2026-04-16"
-comment = "Find window data - variable length, 24 min"
+updated = "2026-05-22"
+comment = "Find window data - variable length, 24 min. Peer-confirmed 2026-05-20 (OG SEQ). Pre-patch was 0xcf5c."
 
   [[zone.payloads]]
   dir           = "server"

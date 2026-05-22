@@ -37,6 +37,31 @@ Re-confirmed post-patch (committed to `conf/opcodes.toml`, all 2026-05-22):
 | OP_DeleteSpawn | `0x94d4` | 4b S>C `deleteSpawnStruct`; fires at median 1ms after OP_Death (NPC→corpse swap); 100% co-occurrence with OP_Death, 90/90 kills; 136 total fires (extra = corpse decays) |
 | OP_RemoveSpawn | `0xeb88` | 5b S>C `removeSpawnStruct`; fires paired with OP_DeleteSpawn in same death burst; removeSpawn byte = 0 (radius) or 1 (permanent) |
 
+Batch re-confirmed 2026-05-22 (peer-confirmed OG SEQ 2026-05-20; same post-patch table):
+
+| Opcode | New id | Notes |
+|--------|--------|-------|
+| OP_TimeOfDay | `0x7e22` | timeOfDayStruct SZC_match S>C. Pre-patch: 0x816a |
+| OP_SpawnDoor | `0x33ec` | doorStruct SZC_modulus S>C. Pre-patch: 0xf724 |
+| OP_SendZonePoints | `0xad5c` | zonePointsStruct SZC_none S>C. Pre-patch: 0x395b |
+| OP_AAExpUpdate | `0x0c97` | altExpUpdateStruct SZC_match S>C. Pre-patch: 0xbf67 |
+| OP_NpcMoveUpdate | `0x917c` | Variable-size NPC movement (distinct from 14b OP_MobUpdate 0x4a4f). Pre-patch: 0x7c8c |
+| OP_SpawnAppearance | `0x9826` | spawnAppearanceStruct SZC_match both dirs. Pre-patch: 0xca91 |
+| OP_GuildMemberUpdate | `0x9abe` | GuildMemberUpdate SZC_match S>C. Pre-patch: 0x84c3 |
+| OP_ClickObject | `0xab5e` | remDropStruct SZC_match both dirs. Pre-patch: 0x0dcd |
+| OP_Action | `0x049e` | actionStruct + actionAltStruct SZC_match both dirs. Covers combat/spell actions (melee hits, etc.). Pre-patch: 0xa366 |
+| OP_Consider | `0xa1e7` | considerStruct SZC_match both dirs. Fires on /con. Pre-patch: 0xae23 |
+| OP_ZoneChange | `0x9148` | zoneChangeStruct SZC_match both dirs. Fires C>S when client zones, S>C with destination. Pre-patch: 0xf996 |
+| OP_SimpleMessage | `0x44a0` | simpleMessageStruct SZC_match S>C. Pre-patch: 0x6660 |
+| OP_FormattedMessage | `0x5b40` | formattedMessageStruct SZC_none S>C. Pre-patch: 0x302b |
+| OP_CommonMessage | `0x498b` | channelMessageStruct SZC_none both dirs. Chat channels (/tell /ooc /shout etc). Pre-patch: 0xdd47 |
+| OP_SpecialMesg | `0x7162` | specialMessageStruct SZC_none S>C. Hail responses, textual NPC info. Pre-patch: 0x1940 |
+| OP_GuildMemberList | `0x4058` | Variable-length guild member list. Pre-patch: 0xbe23 |
+| OP_GuildsInZoneList | `0xd5e8` | guildsInZoneListStruct SZC_none S>C. Pre-patch: 0x4e57 |
+| OP_Find | `0x695f` | Find window data S>C variable-length. Pre-patch: 0xcf5c |
+
+Naming note: OG SEQ labels 0x8d86 as `OP_ExpandedGuildInfo` and `0x9f2b` as `OP_GuildMOTD`. We confirmed 0x8d86 has setter+MOTD text payload and kept it as `OP_GuildMOTD`. Whether 0x9f2b is a separate MOTD-only opcode remains unverified — see OP_ExpandedGuildInfo (ffff, noted).
+
 Also fixed (code, not opcode id): post-patch `playerSelfPosStruct` layout —
 self heading was read from the animation/position bits (offset 26), so moving
 forward spun the player marker. Corrected to the modern layout (y@6, heading:12+pitch:12@10,
@@ -1001,3 +1026,34 @@ No dedicated VPK — used the Pi daemon's running `--list-events` log and SpawnT
 **Method detail:** built a kill-correlation table from `--list-events` output (format: `epoch_ms dir opcode len stream name`). Scanned all S>C zone-unknown 4b/5b packets within a 0-60s window after each DB kill timestamp. Both `0x94d4` and `0xeb88` scored 0.87 correlation (85/98 kills in the window at first pass; 90/90 after rechecking against OP_Death timestamps directly). The tight 1ms median gap after OP_Death rules out corpse-decay as the trigger for the initial fire — they're part of the NPC→corpse spawn-swap sequence.
 
 **Corpse decay timing on Mischief TLP:** ~30s if mob carries no loot (or after clicking Done to empty the corpse), ~6 min for regular looted mobs, ~30 min for named. This explains the 90+46=136 fire count: 90 immediate (NPC removal) + 46 delayed (corpse decay for un-looted or slow-decay mobs).
+
+### 2026-05-22 — OG SEQ batch (18 pre-patch IDs updated from peer-confirmed source)
+
+Source: `C:\Users\DElyo\Downloads\OG FILES\OG SEQ\conf\zoneopcodes.xml` updated 2026-05-20 — a separately maintained SEQ installation. IDs that overlap with our own capture-verified post-patch values (0x94d4, 0xeb88, 0x4a4f, 0x1eb2, 0x1994, 0xa5bf, 0xe284, etc.) match exactly, confirming this source reflects the same post-patch opcode table.
+
+All 18 opcodes below had pre-patch IDs (dated 2026-04-16) in `conf/opcodes.toml`. Updated to post-patch values and committed; updated dates set to 2026-05-22.
+
+| Opcode | New id | Pre-patch id |
+|--------|--------|--------------|
+| OP_TimeOfDay | 0x7e22 | 0x816a |
+| OP_SpawnDoor | 0x33ec | 0xf724 |
+| OP_SendZonePoints | 0xad5c | 0x395b |
+| OP_AAExpUpdate | 0x0c97 | 0xbf67 |
+| OP_NpcMoveUpdate | 0x917c | 0x7c8c |
+| OP_SpawnAppearance | 0x9826 | 0xca91 |
+| OP_GuildMemberUpdate | 0x9abe | 0x84c3 |
+| OP_ClickObject | 0xab5e | 0x0dcd |
+| OP_Action | 0x049e | 0xa366 |
+| OP_Consider | 0xa1e7 | 0xae23 |
+| OP_ZoneChange | 0x9148 | 0xf996 |
+| OP_SimpleMessage | 0x44a0 | 0x6660 |
+| OP_FormattedMessage | 0x5b40 | 0x302b |
+| OP_CommonMessage | 0x498b | 0xdd47 |
+| OP_SpecialMesg | 0x7162 | 0x1940 |
+| OP_GuildMemberList | 0x4058 | 0xbe23 |
+| OP_GuildsInZoneList | 0xd5e8 | 0x4e57 |
+| OP_Find | 0x695f | 0xcf5c |
+
+Also from OG SEQ, unresolved naming conflict: OG SEQ labels 0x8d86 as OP_ExpandedGuildInfo and 0x9f2b as OP_GuildMOTD. We have 0x8d86 as OP_GuildMOTD (confirmed: 192b S>C, setter name + MOTD text). Whether 0x9f2b is a separate packet is unverified. OP_ExpandedGuildInfo entry reset to ffff pending independent capture verification.
+
+Opcodes NOT updated (we're ahead of OG SEQ): OP_ExpUpdate (0x6961), OP_HPUpdate (0x8f45), OP_Stamina (0x4b67), OP_ManaChange (0x130c), OP_WearChange (0x800e) — OG SEQ still has these at ffff while we confirmed them in April–May captures.
