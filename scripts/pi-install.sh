@@ -85,7 +85,10 @@ cmake --build build -j"$(nproc)"
 
 # ── install binary + data files ───────────────────────────────────────────────
 info "Installing binary and config data..."
-sudo cmake --install build
+
+# CMakeLists.txt has no install() target for the executable, so copy manually.
+sudo install -d "${INSTALL_DIR}/bin"
+sudo install -m 0755 "${BUILD_DIR}/build/showeq-daemon" "${INSTALL_DIR}/bin/showeq-daemon"
 
 # conf/ files (opcode XML, schema) → PKGDATADIR
 sudo install -d "${INSTALL_DIR}/share/showeq-daemon"
@@ -95,7 +98,7 @@ sudo install -m 0644 conf/seqdef.xml       "${INSTALL_DIR}/share/showeq-daemon/"
 
 # ── grant pcap capabilities (avoids needing sudo at runtime) ──────────────────
 info "Granting cap_net_raw + cap_net_admin to binary..."
-sudo setcap cap_net_admin,cap_net_raw=eip "${INSTALL_DIR}/bin/showeq-daemon"
+sudo /usr/sbin/setcap cap_net_admin,cap_net_raw=eip "${INSTALL_DIR}/bin/showeq-daemon"
 
 # ── write /etc config ─────────────────────────────────────────────────────────
 info "Writing ${CONFIG_DIR}/showeq-daemon.env..."
