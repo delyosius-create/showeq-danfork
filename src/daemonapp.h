@@ -31,6 +31,7 @@ class SessionAdapter;
 class Spells;
 class SpawnMonitor;
 class SpawnShell;
+class SpawnTracker;
 class SpellShell;
 class WsServer;
 class ZoneMgr;
@@ -90,6 +91,9 @@ public:
         // where no client connects and the listen port is just a
         // collision risk against the user's main daemon instance.
         bool         noListen = false;
+        // If set, SpawnTracker logs spawn lifecycle + movement to this
+        // SQLite path for offline pattern analysis (--spawn-db PATH).
+        QString      spawnDb;
         QHostAddress listenHost;
         quint16      listenPort = 9090;
     };
@@ -143,6 +147,7 @@ private:
     Player*                         m_player        = nullptr;
     FilterMgr*                      m_filterMgr     = nullptr;
     SpawnShell*                     m_spawnShell    = nullptr;
+    SpawnTracker*                   m_spawnTracker  = nullptr;
     SpawnMonitor*                   m_spawnMonitor  = nullptr;
     SpellShell*                     m_spellShell    = nullptr;
     GroupMgr*                       m_groupMgr      = nullptr;

@@ -23,10 +23,10 @@ endif()
 # Default to Qt6; pass -DSEQ_USE_QT5=ON to build against Qt5.
 option(SEQ_USE_QT5 "Build against Qt5 instead of Qt6" OFF)
 if(SEQ_USE_QT5)
-    find_package(Qt5 5.15 REQUIRED COMPONENTS Core Network Xml WebSockets)
+    find_package(Qt5 5.15 REQUIRED COMPONENTS Core Network Xml WebSockets Sql)
     set(QT_VERSION_MAJOR 5)
 else()
-    find_package(Qt6 REQUIRED COMPONENTS Core Network Xml WebSockets)
+    find_package(Qt6 REQUIRED COMPONENTS Core Network Xml WebSockets Sql)
     set(QT_VERSION_MAJOR 6)
 endif()
 find_package(Protobuf REQUIRED)
@@ -142,6 +142,7 @@ set(SEQ_DAEMON_CORE_NEW_SOURCES
   src/itempacket.cpp
   src/itemcache.cpp
   src/zoneservermgr.cpp
+  src/spawntracker.cpp
 )
 
 # Regenerate conf/{zone,world}opcodes.xml from conf/opcodes.toml whenever the
@@ -183,6 +184,7 @@ target_link_libraries(seq-daemon-core PUBLIC
   Qt${QT_VERSION_MAJOR}::Core
   Qt${QT_VERSION_MAJOR}::Network
   Qt${QT_VERSION_MAJOR}::Xml
+  Qt${QT_VERSION_MAJOR}::Sql
   ${PCAP_LIBRARIES}
   ${ZLIB_LIBRARIES}
   Threads::Threads

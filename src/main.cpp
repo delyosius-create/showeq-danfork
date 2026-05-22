@@ -161,6 +161,10 @@ int main(int argc, char** argv)
         "<unix_ms> <C|S> 0xXXXX <bytes> <stream> <name>. Use to time-"
         "correlate which opcode fired around an in-game event.",
         "file");
+    QCommandLineOption spawnDbOpt(QStringList{"spawn-db"},
+        "Log spawn lifecycle + movement to SQLite FILE for offline pattern "
+        "analysis (locations, respawn timing, kill vs natural despawn).",
+        "file");
 
     parser.addOption(deviceOpt);
     parser.addOption(ipOpt);
@@ -174,6 +178,7 @@ int main(int argc, char** argv)
     parser.addOption(noListenOpt);
     parser.addOption(dumpPayloadOpt);
     parser.addOption(listEventsOpt);
+    parser.addOption(spawnDbOpt);
     parser.process(app);
 
     DaemonApp::Config cfg;
@@ -188,6 +193,7 @@ int main(int argc, char** argv)
     cfg.noListen     = parser.isSet(noListenOpt);
     cfg.dumpPayload  = parser.values(dumpPayloadOpt);
     cfg.listEvents   = parser.value(listEventsOpt);
+    cfg.spawnDb      = parser.value(spawnDbOpt);
 
     // Resolve record paths against cwd for the same reason --config-dir
     // is — under sudo, $HOME points at /root.
@@ -202,6 +208,9 @@ int main(int argc, char** argv)
     }
     if (!cfg.listEvents.isEmpty() && QDir::isRelativePath(cfg.listEvents)) {
         cfg.listEvents = QFileInfo(cfg.listEvents).absoluteFilePath();
+    }
+    if (!cfg.spawnDb.isEmpty() && QDir::isRelativePath(cfg.spawnDb)) {
+        cfg.spawnDb = QFileInfo(cfg.spawnDb).absoluteFilePath();
     }
 
     // Resolve --config-dir relative to the invocation cwd, not $HOME.

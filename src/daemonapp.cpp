@@ -34,6 +34,7 @@
 #include "sessionadapter.h"
 #include "spawnmonitor.h"
 #include "spawnshell.h"
+#include "spawntracker.h"
 #include "spells.h"
 #include "spellshell.h"
 #include "wsserver.h"
@@ -196,6 +197,13 @@ bool DaemonApp::start()
     }
 
     m_spawnShell = new SpawnShell(*m_filterMgr, m_zoneMgr, m_player, m_guildMgr);
+
+    // Optional spawn-lifecycle DB for offline pattern analysis. Taps
+    // SpawnShell signals; logs locations/timing + kill vs despawn.
+    if (!m_cfg.spawnDb.isEmpty()) {
+        m_spawnTracker = new SpawnTracker(m_spawnShell, m_zoneMgr,
+                                          m_cfg.spawnDb, this);
+    }
 
     // SpawnMonitor learns recurring NPC pop locations + their respawn
     // timers from observed spawn/kill cycles. Mirrors showeq
