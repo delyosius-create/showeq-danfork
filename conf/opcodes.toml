@@ -14,10 +14,10 @@ comment = "CharProfileCode"
   sizechecktype = "none"
 
 [[zone]]
-id      = "f19a"
+id      = "a5bf"
 name    = "OP_ZoneEntry"
-updated = "2026-04-16"
-comment = "ZoneEntryCode"
+updated = "2026-05-22"
+comment = "ZoneEntryCode. Live: C>S clientZoneEntry (~92b, char name e.g. 'Zerkdan'), S>C per-spawn structs (464-483b, name + position floats; 'Sage_Valgond00' NPC). 486 fires on zone-in. Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "client"
@@ -63,10 +63,10 @@ comment = "DoorSpawnsCode"
   sizechecktype = "modulus"
 
 [[zone]]
-id      = "4cc4"
+id      = "92dc"
 name    = "OP_GroundSpawn"
-updated = "2026-04-16"
-comment = "MakeDropCode"
+updated = "2026-05-22"
+comment = "MakeDropCode. Live: 65b S>C, '<len>ITxxxxx_ACTORDEF' model name + position floats (e.g. IT11054_ACTORDEF). Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "server"
@@ -123,10 +123,10 @@ comment = "GuildMOTD"
   sizechecktype = "none"
 
 [[zone]]
-id      = "0aa7"
+id      = "f8d1"
 name    = "OP_ClientUpdate"
-updated = "2026-04-16"
-comment = "Position updates"
+updated = "2026-05-22"
+comment = "Position updates. Live: 42b C>S playerSelfPosStruct (self position, periodic). Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "server"
@@ -150,10 +150,10 @@ comment = "Position updates"
   sizechecktype = "none"
 
 [[zone]]
-id      = "73da"
+id      = "917c"
 name    = "OP_MobUpdate"
-updated = "2026-04-16"
-comment = "MobUpdateCode"
+updated = "2026-05-22"
+comment = "MobUpdateCode. Live: 17b S>C, spawn id (u32) + packed position/heading. 28 fires during play. Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "both"
