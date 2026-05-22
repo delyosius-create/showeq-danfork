@@ -2207,10 +2207,10 @@ updated = "2026-05-06"
 comment = "Secondary chat / account / commerce service catalog. Live: 1464b S>C in handshake band (3/3 confirmations); ~18 plaintext Daybreak service URLs."
 
 [[world]]
-id      = "55e6"
+id      = "f21f"
 name    = "OP_ZoneServerInfo"
-updated = "2026-05-06"
-comment = "Zone server connection info. Live: 130b S>C, fires on world->zone handoff (zone server hostname + port). 2/2 confirmations."
+updated = "2026-05-22"
+comment = "Zone server connection info. Live: 130b S>C, fires on world->zone handoff (zone server hostname + port). Payload confirmed: 'eqzone-80.everquest.com'. 2026-05-22 capture on Mischief TLP."
 
   [[world.payloads]]
   dir           = "server"
