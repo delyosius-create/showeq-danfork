@@ -150,10 +150,10 @@ comment = "Position updates"
   sizechecktype = "none"
 
 [[zone]]
-id      = "917c"
+id      = "4a4f"
 name    = "OP_MobUpdate"
 updated = "2026-05-22"
-comment = "MobUpdateCode. Live: 17b S>C, spawn id (u32) + packed position/heading. 28 fires during play. Mischief TLP 2026-05-22 capture."
+comment = "MobUpdateCode. Live: 14b S>C, legacy spawnPositionUpdate layout (int16 spawnId + int64 y:19/z:19/u3:7/x:19 + heading), coords x8. Verified: 33/60 updates matched spawn positions exactly (rest were moving mobs). Earlier 0x917c was a wrong guess (15-18b, not position). Mischief TLP 2026-05-22 capture."
 
   [[zone.payloads]]
   dir           = "both"
