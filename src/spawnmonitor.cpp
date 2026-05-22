@@ -55,16 +55,20 @@ SpawnPoint::~SpawnPoint()
 
 QString SpawnPoint::key( int x, int y, int z)
 {
-  // Separator-delimited so distinct coordinate triples can't alias to
-  // the same key string. The legacy "%d%d%d" form collided whenever
-  // |x|*10^k landed adjacent to a y or z digit (e.g. 100/10/0 and
-  // 10/0/100 both produced "100100"), causing a second spawn at a new
-  // location to look up the first spawn's candidate and get promoted
-  // as if it were a re-pop of that earlier point.
+  // Snap to a coarse grid before keying. EQ spawn points are fixed, but unlike
+  // MySEQ (which reads exact spawn coords from client memory) we only see
+  // packets, often capturing a mob slightly after it has begun wandering — so
+  // exact x|y|z almost never repeats across respawns and the legacy exact key
+  // produced essentially no spawn points. A 16-unit grid clusters a point's
+  // observed positions so respawns match the same key and timers get learned.
   //
-  // The on-disk .sp format stores x/y/z as separate space-delimited
-  // fields, not the key — so changing key() has no migration impact.
-  return QString::asprintf( "%d|%d|%d", x, y, z );
+  // Separator-delimited so distinct coordinate triples can't alias to the same
+  // key string (the legacy "%d%d%d" form collided when digits ran together).
+  // The on-disk .sp format stores x/y/z separately, not the key — so changing
+  // key() has no migration impact.
+  const int g = 16;
+  auto snap = [g](int v){ return (v >= 0 ? (v + g / 2) : (v - g / 2)) / g * g; };
+  return QString::asprintf( "%d|%d|%d", snap(x), snap(y), snap(z) );
 }
 
 Spawn* SpawnPoint::getSpawn() const
