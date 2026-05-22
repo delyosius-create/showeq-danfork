@@ -988,7 +988,7 @@ struct pos
   m_validPos = true;
   updateLast();
 
-  m_headingDegrees = 360 - ((pupdate->heading * 360) >> 11);
+  m_headingDegrees = 360 - ((pupdate->heading * 360) >> 12);
   emit headingChanged(m_headingDegrees);
 
   emit posChanged(x(), y(), z(), 

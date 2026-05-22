@@ -2608,22 +2608,22 @@ struct playerSelfPosStruct
 /*0010*/
 	 float    deltaX;                    // change in x
 /*0014*/
-	 float    z;                         // z coord (3rd loc value)
-/*0018*/
-	 float    y;                         // y coord (2nd loc value)
-/*0022*/
 	 float    deltaZ;                    // change in z
-/*0026*/
-	 signed   animation:10;              // current animation
-	 unsigned heading:12;                // heading
-	 unsigned padding05:10;
-/*0030*/
-	 float    deltaY;                    // change in y
-/*0034*/
-	 signed   deltaHeading:10;           // change in heading
-	 unsigned padding07:22;
-/*0038*/
+/*0018*/
 	 float    x;                         // x coord (1st loc value)
+/*0022*/
+	 float    y;                         // y coord (2nd loc value)
+/*0026*/
+	 signed   animation:10;              // velocity
+	 unsigned padding05:22;
+/*0030*/
+	 float    z;                         // z coord (3rd loc value)
+/*0034*/
+	 float    deltaY;                    // change in y
+/*0038*/
+	 signed   deltaHeading:10;           // change in heading
+	 unsigned heading:12;                // heading
+	 unsigned padding07:10;
 /*0042*/
 };
 
