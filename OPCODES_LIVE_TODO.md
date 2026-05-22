@@ -34,6 +34,8 @@ Re-confirmed post-patch (committed to `conf/opcodes.toml`, all 2026-05-22):
 | OP_PlayerProfile | `0xe284` | ~39.6KB S>C zone-in; char name `Zerkdan` at offset 20494 (charProfileStruct name field). Fixes self-identification |
 | OP_Death | `0x1eb2` | 40b S>C `newCorpseStruct` (spawnId@0 dead, killerId@4); kill-correlated: dead id varied per kill, killer id = player spawn id; confirmed vs EQ-log "You have slain" timestamps |
 | OP_TargetMouse | `0x1994` | 4b C>S `clientTargetStruct` (uint32 newTarget); found by EQ-log "Targeted (NPC)" correlation — fired once per target action |
+| OP_DeleteSpawn | `0x94d4` | 4b S>C `deleteSpawnStruct`; fires at median 1ms after OP_Death (NPC→corpse swap); 100% co-occurrence with OP_Death, 90/90 kills; 136 total fires (extra = corpse decays) |
+| OP_RemoveSpawn | `0xeb88` | 5b S>C `removeSpawnStruct`; fires paired with OP_DeleteSpawn in same death burst; removeSpawn byte = 0 (radius) or 1 (permanent) |
 
 Also fixed (code, not opcode id): post-patch `playerSelfPosStruct` layout —
 self heading was read from the animation/position bits (offset 26), so moving
@@ -51,7 +53,7 @@ Open struct issues:
 - `spawnStruct`: parser under-reads ~62 trailing bytes (`fillSpawnStruct` expects more than the post-patch wire carries). Names decode; position likely OK (divergence is at the tail) but unverified — needs full untruncated S>C `0xa5bf` payloads to retrace.
 - ~~`spawnPositionUpdate` (OP_MobUpdate): wire is 15-18b variable vs legacy 14b fixed~~ — **RESOLVED**: the wrong opcode id (0x917c, 15-18b) was masking the correct 14b struct. With the corrected id 0x4a4f the legacy 14b layout decodes correctly; no struct change needed.
 
-Still unmapped post-patch: despawn (OP_DeleteSpawn/OP_RemoveSpawn pre-patch ids 0x6965/0x6aa0 are stale), chat, and the rest of the long tail — they need fresh **active-play** captures. Daemon on the Pi is configured with `--opcode-stats`/`--list-events` to collect them.
+Still unmapped post-patch: chat and the rest of the long tail — they need fresh **active-play** captures. Daemon on the Pi is configured with `--opcode-stats`/`--list-events` to collect them.
 
 ---
 
@@ -86,9 +88,11 @@ Still unmapped post-patch: despawn (OP_DeleteSpawn/OP_RemoveSpawn pre-patch ids 
 - [ ] OP_IncreaseStats
 - [ ] OP_UIUpdate
 
-### Spawn / appearance (8)
+### Spawn / appearance (10)
 - [ ] OP_ZoneSpawns
 - [ ] OP_SpawnRename
+- [x] OP_DeleteSpawn — `0x94d4` (2026-05-22)
+- [x] OP_RemoveSpawn — `0xeb88` (2026-05-22)
 - [x] OP_WearChange — `0x800e` (2026-05-12)
 - [ ] OP_Illusion
 - [ ] OP_Shroud
@@ -985,3 +989,15 @@ Side note: also ruled out during this session — `0x3f37` (coin/loot drops, fir
 Capture: targeted mobs repeatedly using left-click while `--dump-payload 0x1994` was active. Method: EQ-log `Targeted (NPC): <name>` timestamp correlation — `0x1994` fired exactly once per target action (C>S, 4b). Previous stale id `0x5727` post-patch never matched any traffic.
 
 - **OP_TargetMouse = `0x1994`** (C>S, 4b). Struct: `clientTargetStruct` — `uint32 newTarget` (spawn id of the targeted entity). Enables `SpawnShell::clientTarget()` to track the player's current target and update the web-client selection highlight. With `protoencoder.cpp` PC-corpse type fix (commit 1557beb), corpses are now correctly selectable and displayed.
+
+### 2026-05-22 — OP_DeleteSpawn=0x94d4, OP_RemoveSpawn=0xeb88 (live session + events log correlation)
+
+No dedicated VPK — used the Pi daemon's running `--list-events` log and SpawnTracker DB. Method: kill-correlation between `showeq-events.log` and kill timestamps in `eq-spawns.db`.
+
+- **OP_DeleteSpawn = `0x94d4`** (S>C, 4b). Struct: `deleteSpawnStruct` {uint32 spawnId}. Fires at median **1ms after OP_Death** — part of the same death burst as the kill packet. Confirmed 100% co-occurrence with OP_Death across 90 kills (0 misses). Total 136 fires vs 90 kills; the 46 extra fires are delayed corpse decays (mobs with loot taking >60s to decay). Pre-patch id was `0x6965`.
+
+- **OP_RemoveSpawn = `0xeb88`** (S>C, 5b). Struct: `removeSpawnStruct` {uint32 spawnId, uint8 removeSpawn}. Fires paired with OP_DeleteSpawn in the same death burst (also median 1ms after OP_Death), 100% co-occurrence. The `removeSpawn` byte distinguishes permanent removal (=1) from update-radius eviction (=0). Total 134 fires vs 90 kills; 44 extras = delayed decays. Pre-patch id was `0x6aa0`.
+
+**Method detail:** built a kill-correlation table from `--list-events` output (format: `epoch_ms dir opcode len stream name`). Scanned all S>C zone-unknown 4b/5b packets within a 0-60s window after each DB kill timestamp. Both `0x94d4` and `0xeb88` scored 0.87 correlation (85/98 kills in the window at first pass; 90/90 after rechecking against OP_Death timestamps directly). The tight 1ms median gap after OP_Death rules out corpse-decay as the trigger for the initial fire — they're part of the NPC→corpse spawn-swap sequence.
+
+**Corpse decay timing on Mischief TLP:** ~30s if mob carries no loot (or after clicking Done to empty the corpse), ~6 min for regular looted mobs, ~30 min for named. This explains the 90+46=136 fire count: 90 immediate (NPC removal) + 46 delayed (corpse decay for un-looted or slow-decay mobs).

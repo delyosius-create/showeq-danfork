@@ -161,10 +161,10 @@ comment = "MobUpdateCode. Live: 14b S>C, legacy spawnPositionUpdate layout (int1
   sizechecktype = "match"
 
 [[zone]]
-id      = "6965"
+id      = "94d4"
 name    = "OP_DeleteSpawn"
-updated = "2026-04-16"
-comment = "DeleteSpawnCode"
+updated = "2026-05-22"
+comment = "DeleteSpawnCode. Live: 4b S>C deleteSpawnStruct (uint32 spawnId). Fires at median 1ms after OP_Death — immediate NPC spawn removal on kill. Also fires on corpse decay. 100% co-occurrence with OP_Death across 90 kills; 136 total fires (46 delayed corpse decays). Pre-patch id was 0x6965. Mischief TLP 2026-05-22."
 
   [[zone.payloads]]
   dir           = "both"
@@ -172,10 +172,10 @@ comment = "DeleteSpawnCode"
   sizechecktype = "match"
 
 [[zone]]
-id      = "6aa0"
+id      = "eb88"
 name    = "OP_RemoveSpawn"
-updated = "2026-04-16"
-comment = "Remove spawn from zone"
+updated = "2026-05-22"
+comment = "RemoveSpawnCode. Live: 5b S>C removeSpawnStruct (uint32 spawnId, uint8 removeSpawn). Fires at median 1ms after OP_Death alongside OP_DeleteSpawn — paired NPC removal burst. removeSpawn=0 means outside update radius, =1 means permanent. Pre-patch id was 0x6aa0. Mischief TLP 2026-05-22."
 
   [[zone.payloads]]
   dir           = "both"
