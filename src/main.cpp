@@ -248,7 +248,10 @@ int main(int argc, char** argv)
             ::_exit(75);
         }
         qInfo("shutdown signal received, exiting");
-        QCoreApplication::quit();
+        // Qt teardown crashes with live pcap state on ARM (bus error).
+        // Flush log writers explicitly then bypass teardown, same as SIGHUP.
+        daemon.flushLogs();
+        ::_exit(0);
     });
 
     if (daemon.importHandoffState(cfg.configDir))

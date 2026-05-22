@@ -108,6 +108,11 @@ public:
     // on SIGHUP. No-op if the capture pipeline was never started.
     void exportHandoffState(const QString& configDir) const;
 
+    // Flush all log writers (opcode-stats, event-log, payload dumps) to
+    // disk. Call before _exit() on any shutdown path where Qt teardown
+    // won't run (live pcap state causes a bus error on ARM during teardown).
+    void flushLogs();
+
     // Read and apply configDir/.handoff if it exists. Call after start()
     // but before app.exec() — pcap fires via Qt signals so no packets
     // are processed until the event loop begins. Returns true if state

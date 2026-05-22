@@ -841,6 +841,14 @@ void DaemonApp::exportHandoffState(const QString& configDir) const
         m_spawnMonitor->saveSpawnPoints();
 }
 
+void DaemonApp::flushLogs()
+{
+    if (m_opcodeStats)
+        m_opcodeStats->writeReport();
+    if (m_eventLogger)
+        m_eventLogger->flush();
+}
+
 bool DaemonApp::importHandoffState(const QString& configDir)
 {
     if (!m_packet || !m_packet->importHandoffState(configDir))

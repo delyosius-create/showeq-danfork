@@ -32,6 +32,7 @@ public:
     EventLogger(EQPacket* packet, const QString& outPath,
                 QObject* parent = nullptr);
     ~EventLogger() override;
+    void flush();  // explicit flush for _exit() shutdown paths
 
 private slots:
     void onDecodedZonePacket(const uint8_t* data, size_t len, uint8_t dir,

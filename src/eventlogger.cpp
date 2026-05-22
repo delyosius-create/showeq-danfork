@@ -43,6 +43,11 @@ EventLogger::~EventLogger()
     m_out.flush();
 }
 
+void EventLogger::flush()
+{
+    m_out.flush();
+}
+
 void EventLogger::onDecodedZonePacket(const uint8_t* /*data*/, size_t len,
                                       uint8_t dir, uint16_t opcode,
                                       const EQPacketOPCode* entry)
