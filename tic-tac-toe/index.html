@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0f1020">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Tic-Tac-Toe</title>
 <style>
@@ -19,7 +20,7 @@
     --accent: #7c5cff;
   }
 
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
 
   html, body {
     margin: 0;
@@ -36,7 +37,6 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    /* respect notches / home indicators */
     padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 12px);
     min-height: 100dvh;
   }
@@ -72,11 +72,14 @@
     box-shadow: 0 12px 40px rgba(0,0,0,.45);
   }
 
+  /* When locked, let the board grow to use the full screen. */
+  body.locked .board { width: min(92vw, 92vh, 560px); }
+
   .cell {
     background: var(--bg);
     border: none;
     border-radius: 12px;
-    font-size: clamp(2.5rem, 16vw, 4.5rem);
+    font-size: clamp(2.5rem, 16vw, 6rem);
     font-weight: 800;
     color: var(--text);
     display: flex;
@@ -84,7 +87,6 @@
     justify-content: center;
     cursor: pointer;
     transition: transform .08s ease, background .15s ease;
-    user-select: none;
   }
   .cell:active { transform: scale(.95); }
   .cell.x { color: var(--x); }
@@ -124,10 +126,7 @@
     font-weight: 700;
     cursor: pointer;
   }
-  .modes button.active {
-    background: var(--accent);
-    color: #fff;
-  }
+  .modes button.active { background: var(--accent); color: #fff; }
 
   .row { display: flex; gap: 12px; }
 
@@ -144,6 +143,7 @@
   }
   .btn:active { transform: scale(.97); }
   .btn.primary { background: var(--accent); color: #fff; }
+  .btn.lock { background: #243a2a; color: #8ff0a4; }
 
   .scores {
     display: flex;
@@ -163,6 +163,85 @@
   .score .val { font-size: 1.4rem; font-weight: 800; }
   .score.x .val { color: var(--x); }
   .score.o .val { color: var(--o); }
+
+  /* Hide everything except the board + the in-game lock pad while locked. */
+  body.locked h1,
+  body.locked .scores,
+  body.locked .controls { display: none; }
+
+  /* Small unlock pad shown only while locked (hold to exit). */
+  .lockpad {
+    display: none;
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom) + 10px);
+    right: calc(env(safe-area-inset-right) + 10px);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--panel);
+    color: var(--muted);
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    z-index: 30;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  body.locked .lockpad { display: flex; }
+  /* Radial fill that grows during the hold-to-unlock gesture. */
+  .lockpad .fill {
+    position: absolute;
+    inset: 0;
+    background: conic-gradient(var(--accent) var(--p, 0deg), transparent 0deg);
+    opacity: .9;
+  }
+  .lockpad .glyph { position: relative; z-index: 1; }
+
+  /* Replay button while locked. */
+  .lock-replay {
+    display: none;
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom) + 10px);
+    left: calc(env(safe-area-inset-left) + 10px);
+    padding: 12px 18px;
+    border: none;
+    border-radius: 28px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+    z-index: 30;
+    cursor: pointer;
+  }
+  body.locked .lock-replay { display: block; }
+
+  /* Full-screen shield: if the OS drops us out of fullscreen while
+     locked, this covers the game until a parent/child taps to resume. */
+  .shield {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    color: var(--text);
+    z-index: 40;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+    padding: 24px;
+  }
+  .shield.show { display: flex; }
+  .shield .big { font-size: 3rem; }
+  .shield .msg { font-size: 1.2rem; font-weight: 700; color: var(--muted); }
+
+  .hint {
+    font-size: .8rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
 </style>
 </head>
 <body>
@@ -187,6 +266,23 @@
       <button class="btn" id="resetScores">Reset Score</button>
       <button class="btn primary" id="newGame">New Game</button>
     </div>
+    <div class="row">
+      <button class="btn lock" id="lockBtn">🔒 Kids Lock</button>
+    </div>
+    <div class="hint">Kids Lock hides the menus and goes full-screen.<br>To exit: hold the 🔓 button (bottom-right) for 3 seconds.</div>
+  </div>
+
+  <!-- Shown only while locked -->
+  <button class="lock-replay" id="lockReplay">↻ New Game</button>
+  <div class="lockpad" id="lockpad" title="Hold to unlock">
+    <div class="fill" id="lockFill"></div>
+    <div class="glyph">🔓</div>
+  </div>
+
+  <!-- Resume shield (re-enters fullscreen if the OS exits it while locked) -->
+  <div class="shield" id="shield">
+    <div class="big">🔒</div>
+    <div class="msg">Tap to keep playing</div>
   </div>
 
 <script>
@@ -197,17 +293,20 @@
     [0,4,8],[2,4,6]
   ];
 
-  const boardEl  = document.getElementById('board');
-  const statusEl = document.getElementById('status');
-  const scoreXEl = document.getElementById('scoreX');
-  const scoreOEl = document.getElementById('scoreO');
-  const scoreDEl = document.getElementById('scoreD');
-  const labelOEl = document.getElementById('labelO');
+  const boardEl   = document.getElementById('board');
+  const statusEl  = document.getElementById('status');
+  const scoreXEl  = document.getElementById('scoreX');
+  const scoreOEl  = document.getElementById('scoreO');
+  const scoreDEl  = document.getElementById('scoreD');
+  const labelOEl  = document.getElementById('labelO');
+  const shieldEl  = document.getElementById('shield');
+  const lockpadEl = document.getElementById('lockpad');
+  const lockFillEl= document.getElementById('lockFill');
 
   let board, current, gameOver, mode = '2p';
   let scores = { X: 0, O: 0, D: 0 };
+  let locked = false;
 
-  // Human is always X; AI is O.
   const cells = [];
   for (let i = 0; i < 9; i++) {
     const b = document.createElement('button');
@@ -242,7 +341,6 @@
 
   function onCellClick(i) {
     if (gameOver || board[i]) return;
-    // Block taps during AI turn.
     if (mode !== '2p' && current === 'O') return;
     move(i, current);
     if (!gameOver && mode !== '2p' && current === 'O') {
@@ -257,10 +355,7 @@
     cells[i].disabled = true;
 
     const result = evaluate(board);
-    if (result) {
-      endGame(result);
-      return;
-    }
+    if (result) { endGame(result); return; }
     current = current === 'X' ? 'O' : 'X';
     renderStatus();
   }
@@ -270,7 +365,6 @@
     if (result.winner) {
       result.line.forEach(idx => cells[idx].classList.add('win'));
       const who = result.winner === 'X' ? '<span class="x">X</span>' : '<span class="o">O</span>';
-      const label = (mode !== '2p' && result.winner === 'O') ? 'Computer wins!' : `${result.winner === 'X' ? 'X' : 'O'} wins!`;
       statusEl.innerHTML = (mode !== '2p')
         ? (result.winner === 'X' ? 'You win! 🎉' : 'Computer wins 🤖')
         : `${who} wins! 🎉`;
@@ -289,13 +383,10 @@
     scoreDEl.textContent = scores.D;
   }
 
-  // Returns {winner, line} or {draw:true} or null if game continues.
   function evaluate(b) {
     for (const line of WINS) {
       const [a, c, d] = line;
-      if (b[a] && b[a] === b[c] && b[a] === b[d]) {
-        return { winner: b[a], line };
-      }
+      if (b[a] && b[a] === b[c] && b[a] === b[d]) return { winner: b[a], line };
     }
     if (b.every(v => v)) return { winner: null, draw: true };
     return null;
@@ -304,13 +395,9 @@
   // ---- AI ----
   function aiMove() {
     if (gameOver) return;
-    let idx;
-    if (mode === 'easy') {
-      // Easy: mostly random, occasionally smart.
-      idx = Math.random() < 0.5 ? bestMove('O') : randomMove();
-    } else {
-      idx = bestMove('O'); // Hard: unbeatable minimax.
-    }
+    const idx = (mode === 'easy')
+      ? (Math.random() < 0.5 ? bestMove('O') : randomMove())
+      : bestMove('O');
     move(idx, 'O');
   }
 
@@ -343,24 +430,20 @@
       let best = -Infinity;
       for (let i = 0; i < 9; i++) {
         if (b[i]) continue;
-        b[i] = me;
-        best = Math.max(best, minimax(b, depth + 1, false, me, opp));
-        b[i] = '';
+        b[i] = me; best = Math.max(best, minimax(b, depth + 1, false, me, opp)); b[i] = '';
       }
       return best;
     } else {
       let best = Infinity;
       for (let i = 0; i < 9; i++) {
         if (b[i]) continue;
-        b[i] = opp;
-        best = Math.min(best, minimax(b, depth + 1, true, me, opp));
-        b[i] = '';
+        b[i] = opp; best = Math.min(best, minimax(b, depth + 1, true, me, opp)); b[i] = '';
       }
       return best;
     }
   }
 
-  // ---- Controls ----
+  // ---- Mode buttons ----
   document.getElementById('modes').addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
@@ -371,9 +454,107 @@
   });
 
   document.getElementById('newGame').addEventListener('click', newGame);
+  document.getElementById('lockReplay').addEventListener('click', newGame);
   document.getElementById('resetScores').addEventListener('click', () => {
     scores = { X: 0, O: 0, D: 0 };
     updateScores();
+  });
+
+  // =================== KIDS LOCK / KIOSK ===================
+  function requestFullscreen() {
+    const el = document.documentElement;
+    const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (fn) { try { fn.call(el); } catch (e) {} }
+  }
+  function exitFullscreen() {
+    const fn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      if (fn) { try { fn.call(document); } catch (e) {} }
+    }
+  }
+  function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+
+  // Keep the screen awake while locked (best effort).
+  let wakeLock = null;
+  async function acquireWakeLock() {
+    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+  }
+  function releaseWakeLock() {
+    try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) {}
+  }
+
+  function lock() {
+    locked = true;
+    document.body.classList.add('locked');
+    requestFullscreen();
+    acquireWakeLock();
+  }
+
+  function unlock() {
+    locked = false;
+    document.body.classList.remove('locked');
+    shieldEl.classList.remove('show');
+    exitFullscreen();
+    releaseWakeLock();
+  }
+
+  document.getElementById('lockBtn').addEventListener('click', lock);
+
+  // If the OS drops fullscreen while locked, raise the resume shield.
+  function onFsChange() {
+    if (locked && !isFullscreen()) shieldEl.classList.add('show');
+    if (locked && isFullscreen()) shieldEl.classList.remove('show');
+  }
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
+
+  // Tapping the shield re-enters fullscreen (needs a user gesture).
+  shieldEl.addEventListener('click', () => {
+    requestFullscreen();
+    acquireWakeLock();
+    shieldEl.classList.remove('show');
+  });
+
+  // Re-arm the wake lock when returning to the tab while locked.
+  document.addEventListener('visibilitychange', () => {
+    if (locked && document.visibilityState === 'visible') acquireWakeLock();
+  });
+
+  // ---- Hold-to-unlock gesture (3 seconds) ----
+  const HOLD_MS = 3000;
+  let holdStart = 0, holdRAF = 0;
+
+  function holdTick(now) {
+    const elapsed = now - holdStart;
+    const pct = Math.min(elapsed / HOLD_MS, 1);
+    lockFillEl.style.setProperty('--p', (pct * 360) + 'deg');
+    if (pct >= 1) { endHold(); unlock(); return; }
+    holdRAF = requestAnimationFrame(holdTick);
+  }
+  function startHold(e) {
+    e.preventDefault();
+    holdStart = performance.now();
+    holdRAF = requestAnimationFrame(holdTick);
+  }
+  function endHold() {
+    cancelAnimationFrame(holdRAF);
+    lockFillEl.style.setProperty('--p', '0deg');
+  }
+  lockpadEl.addEventListener('touchstart', startHold, { passive: false });
+  lockpadEl.addEventListener('mousedown', startHold);
+  ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev =>
+    lockpadEl.addEventListener(ev, endHold));
+
+  // ---- Hardening against accidental exits ----
+  // Block the context / long-press menu.
+  document.addEventListener('contextmenu', e => { if (locked) e.preventDefault(); });
+  // Block pinch-zoom gestures.
+  document.addEventListener('gesturestart', e => { if (locked) e.preventDefault(); });
+  // Warn before a refresh / close while locked.
+  window.addEventListener('beforeunload', e => {
+    if (locked) { e.preventDefault(); e.returnValue = ''; }
   });
 
   updateScores();
